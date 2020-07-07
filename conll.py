@@ -67,20 +67,26 @@ def iter_conll(filename, include_non_projective=True, verbose=True, lower_case=T
     with open(filename) as f:
         sentence = [root]
         for line in f:
-            if line.isspace() and len(sentence) > 1:
-                if is_projective(sentence):
-                    yield sentence
-                else:
-                    non_proj += 1
-                    if include_non_projective:
+            # UD2.4 it there are some sentence that starts with #
+            # ignore the line containing italina articulated prep
+            if line.startswith("#") or check_articulated_prep(line):
+                pass
+            else:
+                if line.isspace() and len(sentence) > 1:
+                    if is_projective(sentence):
                         yield sentence
                     else:
-                        dropped += 1
-                read += 1
-                sentence = [root]
-                continue
-            entry = ConllEntry.from_line(line, lower_case=lower_case)
-            sentence.append(entry)
+                        non_proj += 1
+                        if include_non_projective:
+                            yield sentence
+                        else:
+                            dropped += 1
+                    read += 1
+                    sentence = [root]
+                    continue
+                # check if line is well formed (no None value everywhere)
+                entry = ConllEntry.from_line(line, lower_case=lower_case)
+                sentence.append(entry)
         # we may still have one sentence in memory
         # if the file doesn't end in an empty line
         if len(sentence) > 1:
@@ -128,6 +134,17 @@ def is_projective(sentence):
     # if more than one root remains then it is not projective
     return len(roots) == 1
 
+
+def check_articulated_prep(line):
+    """
+    ignore the line that contains articulated preposition
+    [Number-Number "art. prep" None None None None None None]
+    """
+    fields = [None if f == '_' else f for f in line.strip().split('\t')]  # fields = list of string
+    if '-' in fields[0]:
+        return True
+    else:
+        return False
 
 
 class ConllEntry:
@@ -181,7 +198,7 @@ class ConllEntry:
         fields = [None if f == '_' else f for f in line.strip().split('\t')]
         if fields[1] is None:
             fields[1] = '_'
-        fields[0] = int(fields[0]) # id
-        fields[6] = int(fields[6]) # head
-        fields[7] = str(fields[7]) # deps
+        fields[0] = int(fields[0])  # id
+        fields[6] = int(fields[6])  # head
+        fields[7] = str(fields[7])  # deps
         return ConllEntry(*fields, lower_case=lower_case)
