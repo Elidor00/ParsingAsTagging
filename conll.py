@@ -30,6 +30,7 @@ def eval_conll(sentences, gold_filename, verbose=True):
                     print(str(entry), file=f)
             print('', file=f)
         f.flush()
+        subprocess.run(["./parse.sh", gold_filename])
         p = subprocess.run(['./eval.pl', '-g', gold_filename, '-s', f.name], stdout=subprocess.PIPE)
         o = p.stdout.decode('utf-8')
         if verbose: print(o)
@@ -64,29 +65,25 @@ def iter_conll(filename, include_non_projective=True, verbose=True, lower_case=T
     non_proj = 0
     dropped = 0
     root = ConllEntry(id=0, form='<root>', upos='<root>', xpos='<root>', head=0, deprel='rroot')
+    subprocess.run(["./parse.sh", filename])
     with open(filename) as f:
         sentence = [root]
         for line in f:
-            # UD2.4 it there are some sentence that starts with #
-            # ignore the line containing italina articulated prep
-            if line.startswith("#") or check_articulated_prep(line):
-                pass
-            else:
-                if line.isspace() and len(sentence) > 1:
-                    if is_projective(sentence):
+            if line.isspace() and len(sentence) > 1:
+                if is_projective(sentence):
+                    yield sentence
+                else:
+                    non_proj += 1
+                    if include_non_projective:
                         yield sentence
                     else:
-                        non_proj += 1
-                        if include_non_projective:
-                            yield sentence
-                        else:
-                            dropped += 1
-                    read += 1
-                    sentence = [root]
-                    continue
-                # check if line is well formed (no None value everywhere)
-                entry = ConllEntry.from_line(line, lower_case=lower_case)
-                sentence.append(entry)
+                        dropped += 1
+                read += 1
+                sentence = [root]
+                continue
+            # check if line is well formed (no None value everywhere)
+            entry = ConllEntry.from_line(line, lower_case=lower_case)
+            sentence.append(entry)
         # we may still have one sentence in memory
         # if the file doesn't end in an empty line
         if len(sentence) > 1:
@@ -133,18 +130,6 @@ def is_projective(sentence):
                 break
     # if more than one root remains then it is not projective
     return len(roots) == 1
-
-
-def check_articulated_prep(line):
-    """
-    ignore the line that contains articulated preposition
-    [Number-Number "art. prep" None None None None None None]
-    """
-    fields = [None if f == '_' else f for f in line.strip().split('\t')]  # fields = list of string
-    if '-' in fields[0]:
-        return True
-    else:
-        return False
 
 
 class ConllEntry:
