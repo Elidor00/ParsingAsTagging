@@ -1,5 +1,4 @@
 import numpy as np
-from torch import nn
 import torch
 
 # dowwnloaded glove from http://nlp.stanford.edu/data/glove.6B.zip

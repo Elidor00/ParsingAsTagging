@@ -1,8 +1,5 @@
-import numpy as np
 import pickle
 import re
-import torch
-#from allennlp.modules.elmo import Elmo, batch_to_ids
 from torch import nn
 from torch.nn import functional as F
 
