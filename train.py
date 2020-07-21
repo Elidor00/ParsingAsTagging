@@ -194,6 +194,8 @@ what = args.early_stopping_on
 print('\ntraining')
 device = torch.device(f'cuda:{args.which_cuda}' if torch.cuda.is_available() else 'cpu')
 pat = Pat(args, word_vocab, tag_vocab, pos_vocab, deprel, char_vocab).to(device)
+print("Model:")
+print(pat)
 pat.mode = 'training'
 
 
