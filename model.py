@@ -179,12 +179,12 @@ class Pat(nn.Module):
         )
 
         self.hidden2_to_pos = nn.Linear(
-            in_features=self.mlp_output_size,
+            in_features=self.mlp_output_size + 40,
             out_features=len(self.pos_vocab),
         )
 
         self.hidden2_to_dep = nn.Linear(
-            in_features=self.mlp_output_size * 2 if self.use_head else self.mlp_output_size, # Depending on whether the head is used or not
+            in_features=self.mlp_output_size * 2 + 40 if self.use_head else self.mlp_output_size + 40, # Depending on whether the head is used or not
             out_features=len(self.deprel_vocab),
         )
 
@@ -444,8 +444,8 @@ class Pat(nn.Module):
         return [[torch.tensor(self.get_polyglot_embedding(word)) for word in sentence] for sentence in orig_w]
 
     def forward(self, sentences):
-        orig_w = [[e.form for e in sentence] for sentence in sentences]
-
+        orig_w = [[e.form for e in sentence] for sentence in sentences]  # all token from a given sentence
+        # print("token: " + str(orig_w))
         w, t, x_lengths = self.sentence2tok_tags(sentences)
 
         batch_size, seq_len = w.size()
@@ -490,15 +490,15 @@ class Pat(nn.Module):
 
         # (batch_size, seq_len, embedding_dim) -> (batch_size, seq_len, n_lstm_units)
         x = torch.nn.utils.rnn.pack_padded_sequence(x, x_lengths, batch_first=True)
-        x, _ = self.bilstm(x)
+        # x, _ = self.bilstm(x)
         x, _ = torch.nn.utils.rnn.pad_packed_sequence(x, batch_first=True)
         # (batch_size, seq_len, n_lstm_units) -> (batch_size * seq_len, n_lstm_units)
         x = x.contiguous()
         x = x.view(-1, x.shape[2])
-        x = self.bilstm_to_hidden1(x)
+        # x = self.bilstm_to_hidden1(x)
         x = F.relu(x)
         x = self.dropout(x)
-        x = self.hidden1_to_hidden2(x)
+        # x = self.hidden1_to_hidden2(x)
         x = F.relu(x)
 
         y1 = self.hidden2_to_pos(x)
