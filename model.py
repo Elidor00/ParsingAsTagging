@@ -158,7 +158,7 @@ class Pat(nn.Module):
             embedding_dim=self.tag_emb_size,
             padding_idx=self.tag_vocab.pad,
         )
-
+        '''
         self.bilstm = nn.LSTM(
             input_size=self.bilstm_input_size,
             hidden_size=self.bilstm_hidden_size,
@@ -177,7 +177,7 @@ class Pat(nn.Module):
             in_features=self.mlp_hidden_size,
             out_features=self.mlp_output_size,
         )
-
+        '''
         self.hidden2_to_pos = nn.Linear(
             in_features=self.mlp_output_size + 40,
             out_features=len(self.pos_vocab),
@@ -192,15 +192,17 @@ class Pat(nn.Module):
         if self.glove_emb == None:
             nn.init.xavier_normal_(self.word_embedding.weight)
         nn.init.xavier_normal_(self.tag_embedding.weight)
-        nn.init.xavier_normal_(self.bilstm_to_hidden1.weight)
-        nn.init.xavier_normal_(self.hidden1_to_hidden2.weight)
+        # nn.init.xavier_normal_(self.bilstm_to_hidden1.weight)
+        # nn.init.xavier_normal_(self.hidden1_to_hidden2.weight)
         nn.init.xavier_normal_(self.hidden2_to_pos.weight)
         nn.init.xavier_normal_(self.hidden2_to_dep.weight)
+        '''
         for name, param in self.bilstm.named_parameters():
             if 'bias' in name:
                 nn.init.constant_(param, 0)
             elif 'weight' in name:
                 nn.init.xavier_normal_(param)
+        '''
 
     @staticmethod
     def load(name, device):
