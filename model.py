@@ -447,6 +447,11 @@ class Pat(nn.Module):
         return [[torch.tensor(self.get_polyglot_embedding(word)) for word in sentence] for sentence in orig_w]
 
     def forward(self, sentences):
+        print("bert " + str(self.bert))
+        print("bilstm input size " + str(self.bilstm_input_size))
+        print("tag embedding " + str(self.tag_embedding))
+        print("char embedding " + str(self.char_emb))
+        print("word embedding " + str(self.word_embedding))
         orig_w = [[e.form for e in sentence] for sentence in sentences]  # all token from a given sentence
         # print("token: " + str(orig_w))
         w, t, x_lengths = self.sentence2tok_tags(sentences)
