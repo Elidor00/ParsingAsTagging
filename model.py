@@ -159,6 +159,7 @@ class Pat(nn.Module):
             padding_idx=self.tag_vocab.pad,
         )
         '''
+        Removed biLSTM layer
         self.bilstm = nn.LSTM(
             input_size=self.bilstm_input_size,
             hidden_size=self.bilstm_hidden_size,
@@ -179,12 +180,12 @@ class Pat(nn.Module):
         )
         '''
         self.hidden2_to_pos = nn.Linear(
-            in_features=self.mlp_output_size + 40,
+            in_features=self.mlp_output_size + self.bilstm_input_size,
             out_features=len(self.pos_vocab),
         )
 
         self.hidden2_to_dep = nn.Linear(
-            in_features=self.mlp_output_size * 2 + 40 if self.use_head else self.mlp_output_size + 40, # Depending on whether the head is used or not
+            in_features=self.mlp_output_size * 2 + self.bilstm_input_size if self.use_head else self.mlp_output_size + self.bilstm_input_size, # Depending on whether the head is used or not
             out_features=len(self.deprel_vocab),
         )
 
@@ -492,15 +493,15 @@ class Pat(nn.Module):
 
         # (batch_size, seq_len, embedding_dim) -> (batch_size, seq_len, n_lstm_units)
         x = torch.nn.utils.rnn.pack_padded_sequence(x, x_lengths, batch_first=True)
-        # x, _ = self.bilstm(x)
+        # x, _ = self.bilstm(x) # removed biLSTM
         x, _ = torch.nn.utils.rnn.pad_packed_sequence(x, batch_first=True)
         # (batch_size, seq_len, n_lstm_units) -> (batch_size * seq_len, n_lstm_units)
         x = x.contiguous()
         x = x.view(-1, x.shape[2])
-        # x = self.bilstm_to_hidden1(x)
+        # x = self.bilstm_to_hidden1(x) # removed hidden layer biLSTM
         x = F.relu(x)
         x = self.dropout(x)
-        # x = self.hidden1_to_hidden2(x)
+        # x = self.hidden1_to_hidden2(x) # removed hidden layer biLSTM
         x = F.relu(x)
 
         y1 = self.hidden2_to_pos(x)
