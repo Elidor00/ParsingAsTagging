@@ -185,7 +185,7 @@ class Pat(nn.Module):
         )
 
         self.hidden2_to_dep = nn.Linear(
-            in_features=self.mlp_output_size * 2 + self.bilstm_input_size if self.use_head else self.mlp_output_size + self.bilstm_input_size, # Depending on whether the head is used or not
+            in_features=self.bilstm_input_size * 2 if self.use_head else self.bilstm_input_size, # Depending on whether the head is used or not
             out_features=len(self.deprel_vocab),
         )
 
