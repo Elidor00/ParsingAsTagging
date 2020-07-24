@@ -176,11 +176,11 @@ class Pat(nn.Module):
 
         self.hidden1_to_hidden2 = nn.Linear(
             in_features=self.mlp_hidden_size,
-            out_features=self.mlp_output_size,
+            out_features=self.mlp_output_size, 
         )
         '''
         self.hidden2_to_pos = nn.Linear(
-            in_features=self.mlp_output_size + self.bilstm_input_size,
+            in_features=self.bilstm_input_size,
             out_features=len(self.pos_vocab),
         )
 
@@ -452,6 +452,8 @@ class Pat(nn.Module):
         print("tag embedding " + str(self.tag_embedding))
         print("char embedding " + str(self.char_emb))
         print("word embedding " + str(self.word_embedding))
+        print("mlp output size " + str(self.mlp_output_size))
+        print("mlp hidden size " + str(self.mlp_hidden_size))
         orig_w = [[e.form for e in sentence] for sentence in sentences]  # all token from a given sentence
         # print("token: " + str(orig_w))
         w, t, x_lengths = self.sentence2tok_tags(sentences)
