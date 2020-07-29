@@ -11,9 +11,11 @@ from utils import first
 import networkx as nx
 from collections import defaultdict
 
+'''
+Original PaT Model
+'''
 
 class Pat(nn.Module):
-
     def __init__(self, args, word_vocab, tag_vocab, pos_vocab, deprel_vocab, char_vocab):
         super().__init__()
 
@@ -155,7 +157,7 @@ class Pat(nn.Module):
 
         self.tag_embedding = nn.Embedding(
             num_embeddings=len(self.tag_vocab),
-            embedding_dim=self.tag_emb_size,
+            embedding_dim=self.tag_emb_size,  # vector dimension for tag embedding
             padding_idx=self.tag_vocab.pad,
         )
 
@@ -196,11 +198,13 @@ class Pat(nn.Module):
         nn.init.xavier_normal_(self.hidden1_to_hidden2.weight)
         nn.init.xavier_normal_(self.hidden2_to_pos.weight)
         nn.init.xavier_normal_(self.hidden2_to_dep.weight)
+        '''
         for name, param in self.bilstm.named_parameters():
             if 'bias' in name:
                 nn.init.constant_(param, 0)
             elif 'weight' in name:
                 nn.init.xavier_normal_(param)
+        '''
 
     @staticmethod
     def load(name, device):
@@ -444,8 +448,8 @@ class Pat(nn.Module):
         return [[torch.tensor(self.get_polyglot_embedding(word)) for word in sentence] for sentence in orig_w]
 
     def forward(self, sentences):
-        orig_w = [[e.form for e in sentence] for sentence in sentences]
-
+        orig_w = [[e.form for e in sentence] for sentence in sentences]  # all token from a given sentence
+        # print("token: " + str(orig_w))
         w, t, x_lengths = self.sentence2tok_tags(sentences)
 
         batch_size, seq_len = w.size()
