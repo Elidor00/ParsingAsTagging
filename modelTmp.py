@@ -11,8 +11,9 @@ from utils import first
 import networkx as nx
 from collections import defaultdict
 
+
 '''
-In this model I removed the biLSTM and the hidden layers connected to it
+In this model I only removed the biLSTM and not even the hidden layers connected to it
 '''
 
 class Pat(nn.Module):
@@ -158,11 +159,10 @@ class Pat(nn.Module):
 
         self.tag_embedding = nn.Embedding(
             num_embeddings=len(self.tag_vocab),
-            embedding_dim=self.tag_emb_size,
+            embedding_dim=self.tag_emb_size,  # vector dimension for tag embedding
             padding_idx=self.tag_vocab.pad,
         )
         '''
-        Removed biLSTM layer
         self.bilstm = nn.LSTM(
             input_size=self.bilstm_input_size,
             hidden_size=self.bilstm_hidden_size,
@@ -171,24 +171,24 @@ class Pat(nn.Module):
             bidirectional=True,
             dropout=self.bilstm_dropout
         )
-
+        '''
         self.bilstm_to_hidden1 = nn.Linear(
-            in_features=self.bilstm_hidden_size * 2,
+            in_features=self.bilstm_input_size,
             out_features=self.mlp_hidden_size,
         )
 
         self.hidden1_to_hidden2 = nn.Linear(
             in_features=self.mlp_hidden_size,
-            out_features=self.mlp_output_size, 
+            out_features=self.mlp_output_size,
         )
-        '''
+
         self.hidden2_to_pos = nn.Linear(
-            in_features=self.bilstm_input_size,
+            in_features=self.mlp_output_size,
             out_features=len(self.pos_vocab),
         )
 
         self.hidden2_to_dep = nn.Linear(
-            in_features=self.bilstm_input_size * 2 if self.use_head else self.bilstm_input_size, # Depending on whether the head is used or not
+            in_features=self.mlp_output_size * 2 if self.use_head else self.mlp_output_size, # Depending on whether the head is used or not
             out_features=len(self.deprel_vocab),
         )
 
@@ -196,8 +196,8 @@ class Pat(nn.Module):
         if self.glove_emb == None:
             nn.init.xavier_normal_(self.word_embedding.weight)
         nn.init.xavier_normal_(self.tag_embedding.weight)
-        # nn.init.xavier_normal_(self.bilstm_to_hidden1.weight)
-        # nn.init.xavier_normal_(self.hidden1_to_hidden2.weight)
+        nn.init.xavier_normal_(self.bilstm_to_hidden1.weight)
+        nn.init.xavier_normal_(self.hidden1_to_hidden2.weight)
         nn.init.xavier_normal_(self.hidden2_to_pos.weight)
         nn.init.xavier_normal_(self.hidden2_to_dep.weight)
         '''
@@ -450,6 +450,13 @@ class Pat(nn.Module):
         return [[torch.tensor(self.get_polyglot_embedding(word)) for word in sentence] for sentence in orig_w]
 
     def forward(self, sentences):
+        print("bert " + str(self.bert))
+        print("bilstm input size " + str(self.bilstm_input_size))
+        print("tag embedding " + str(self.tag_embedding))
+        print("char embedding " + str(self.char_emb))
+        print("word embedding " + str(self.word_embedding))
+        print("mlp output size " + str(self.mlp_output_size))
+        print("mlp hidden size " + str(self.mlp_hidden_size))
         orig_w = [[e.form for e in sentence] for sentence in sentences]  # all token from a given sentence
         # print("token: " + str(orig_w))
         w, t, x_lengths = self.sentence2tok_tags(sentences)
@@ -496,15 +503,15 @@ class Pat(nn.Module):
 
         # (batch_size, seq_len, embedding_dim) -> (batch_size, seq_len, n_lstm_units)
         x = torch.nn.utils.rnn.pack_padded_sequence(x, x_lengths, batch_first=True)
-        # x, _ = self.bilstm(x) # removed biLSTM
+        # x, _ = self.bilstm(x) # removed biLSTM layer
         x, _ = torch.nn.utils.rnn.pad_packed_sequence(x, batch_first=True)
         # (batch_size, seq_len, n_lstm_units) -> (batch_size * seq_len, n_lstm_units)
         x = x.contiguous()
         x = x.view(-1, x.shape[2])
-        # x = self.bilstm_to_hidden1(x) # removed hidden layer biLSTM
+        x = self.bilstm_to_hidden1(x)
         x = F.relu(x)
         x = self.dropout(x)
-        # x = self.hidden1_to_hidden2(x) # removed hidden layer biLSTM
+        x = self.hidden1_to_hidden2(x)
         x = F.relu(x)
 
         y1 = self.hidden2_to_pos(x)

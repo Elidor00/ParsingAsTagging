@@ -11,7 +11,6 @@ import numpy as np
 from utils import chunker, parse_uas, get_slanted_triangular_lr
 from conll import read_conll, eval_conll, parse_conll
 from vocabulary import *
-from model import Pat
 import time
 from bert_features import Bert
 
@@ -94,6 +93,9 @@ parser.add_argument('--dropout', type=float, default=0.2, help="Dropout value")
 parser.add_argument('--part-of-speech', type=str, default="upos", help='Which part of speech tag to use. One of {"upos", or ""xpos"')
 
 parser.add_argument('--which-cuda', type=int, default=0, help='which cuda to use')
+
+#Choose model
+parser.add_argument('--choose-model', type=int, default=0, help='0 for model without biLSTM and hidden layer, 1 for model without only biLSTM')
 
 args = parser.parse_args()
 print(args)
@@ -193,6 +195,10 @@ what = args.early_stopping_on
 
 print('\ntraining')
 device = torch.device(f'cuda:{args.which_cuda}' if torch.cuda.is_available() else 'cpu')
+if args.choose_model:
+    from modelTmp import Pat
+else:
+    from model import Pat
 pat = Pat(args, word_vocab, tag_vocab, pos_vocab, deprel, char_vocab).to(device)
 print("Model:")
 print(pat)

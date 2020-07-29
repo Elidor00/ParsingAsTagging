@@ -8,7 +8,7 @@ import numpy as np
 
 from bert_features import Bert
 from conll import read_conll, eval_conll, parse_conll
-from model import Pat
+# from modelTmp import Pat
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('model', help='serialized model')
@@ -18,6 +18,10 @@ parser.add_argument('--no-cycles', action='store_true', help='no cycles flag')
 parser.add_argument('--no-cycles-strategy', default="optimal", help='what strategy to use for ensuring no cycles in output. Either greedy or optimal')
 parser.add_argument('--print-nr-of-cycles', action='store_true', help='print percentage of cycles in the output')
 parser.add_argument('--which-cuda', type=int, default=0, help='which cuda to use')
+
+#Choose model
+parser.add_argument('--choose-model', type=int, default=0, help='0 for model without biLSTM and hidden layer, 1 for model without only biLSTM')
+
 args = parser.parse_args()
 
 with open(f'{args.model}.pickle', 'rb') as f:
@@ -46,6 +50,10 @@ print(params[0])
 print(args)
 print('parsing test dataset')
 
+if args.model:
+    from modelTmp import Pat
+else:
+    from model import Pat
 pat = Pat.load(args.model, device).to(device)
 pat.mode = 'evaluation'
 pat.no_cycles = args.no_cycles
