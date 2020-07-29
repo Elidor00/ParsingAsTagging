@@ -198,13 +198,11 @@ class Pat(nn.Module):
         nn.init.xavier_normal_(self.hidden1_to_hidden2.weight)
         nn.init.xavier_normal_(self.hidden2_to_pos.weight)
         nn.init.xavier_normal_(self.hidden2_to_dep.weight)
-        '''
         for name, param in self.bilstm.named_parameters():
             if 'bias' in name:
                 nn.init.constant_(param, 0)
             elif 'weight' in name:
                 nn.init.xavier_normal_(param)
-        '''
 
     @staticmethod
     def load(name, device):
