@@ -11,13 +11,11 @@ from utils import first
 import networkx as nx
 from collections import defaultdict
 
-
 '''
-In this model I only removed the biLSTM and not even the hidden layers connected to it
+Original PaT Model
 '''
 
 class Pat(nn.Module):
-
     def __init__(self, args, word_vocab, tag_vocab, pos_vocab, deprel_vocab, char_vocab):
         super().__init__()
 
@@ -162,7 +160,7 @@ class Pat(nn.Module):
             embedding_dim=self.tag_emb_size,  # vector dimension for tag embedding
             padding_idx=self.tag_vocab.pad,
         )
-        '''
+
         self.bilstm = nn.LSTM(
             input_size=self.bilstm_input_size,
             hidden_size=self.bilstm_hidden_size,
@@ -171,9 +169,9 @@ class Pat(nn.Module):
             bidirectional=True,
             dropout=self.bilstm_dropout
         )
-        '''
+
         self.bilstm_to_hidden1 = nn.Linear(
-            in_features=self.bilstm_input_size,
+            in_features=self.bilstm_hidden_size * 2,
             out_features=self.mlp_hidden_size,
         )
 
@@ -496,7 +494,7 @@ class Pat(nn.Module):
 
         # (batch_size, seq_len, embedding_dim) -> (batch_size, seq_len, n_lstm_units)
         x = torch.nn.utils.rnn.pack_padded_sequence(x, x_lengths, batch_first=True)
-        # x, _ = self.bilstm(x) # removed biLSTM layer
+        x, _ = self.bilstm(x)
         x, _ = torch.nn.utils.rnn.pad_packed_sequence(x, batch_first=True)
         # (batch_size, seq_len, n_lstm_units) -> (batch_size * seq_len, n_lstm_units)
         x = x.contiguous()

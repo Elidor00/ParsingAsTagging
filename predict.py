@@ -5,10 +5,11 @@ import pickle
 import torch
 import random
 import numpy as np
+import importlib
 
 from bert_features import Bert
 from conll import read_conll, eval_conll, parse_conll
-# from modelTmp import Pat
+from modelDict import model
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('model', help='serialized model')
@@ -20,7 +21,7 @@ parser.add_argument('--print-nr-of-cycles', action='store_true', help='print per
 parser.add_argument('--which-cuda', type=int, default=0, help='which cuda to use')
 
 #Choose model
-parser.add_argument('--choose-model', type=int, default=0, help='0 for model without biLSTM and hidden layer, 1 for model without only biLSTM')
+parser.add_argument('--choose-model', type=int, default=0, help='0 original model, 1 model without biLSTM and hidden layer, 2 model without only biLSTM')
 
 args = parser.parse_args()
 
@@ -50,11 +51,11 @@ print(params[0])
 print(args)
 print('parsing test dataset')
 
-if args.model:
-    from modelTmp import Pat
-else:
-    from model import Pat
-pat = Pat.load(args.model, device).to(device)
+model_type = model[args.choose_model]
+model_module = importlib.import_module(model_type)
+pat = model_module.Pat.load(args.model, device).to(device)
+print("Model:")
+print(pat)
 pat.mode = 'evaluation'
 pat.no_cycles = args.no_cycles
 pat.no_cycles_strategy = args.no_cycles_strategy
