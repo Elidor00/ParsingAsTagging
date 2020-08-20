@@ -27,6 +27,8 @@ import importlib
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('train')
 parser.add_argument('dev')
+parser.add_argument('--train-metadata', action='store_true', help='specify if train file contains metadata or compound words')
+parser.add_argument('--dev-metadata', action='store_true', help='specify if dev file contains metadata or compound words')
 parser.add_argument('--output', default='output')
 parser.add_argument('--epochs', type=int, default=100)
 parser.add_argument('--glove-emb', type=str, default=None)
@@ -132,18 +134,18 @@ if args.bert_load_features:
 
 else:
     print(f'\nloading training data from {args.train}')
-    train = read_conll(args.train, lower_case=not args.bert_multilingual_cased)
+    train = read_conll(args.train, args.train_metadata, lower_case=not args.bert_multilingual_cased)
     # remove <root> token
     #train = [s[1:] for s in train]
     # ignore sentences that had only <root>
     #train = [s for s in train if len(s) > 0]
 
-    #train = train[:50]
+    train = train[:50]
     # keep a copy of the train dataset   that will be used for evaluation
     train_copy = deepcopy(train)
 
     print(f'\nloading development data from {args.dev}')
-    dev = read_conll(args.dev, lower_case=not args.bert_multilingual_cased)
+    dev = read_conll(args.dev, args.dev_metadata, lower_case=not args.bert_multilingual_cased)
     #dev = [s[1:] for s in dev]
     #dev = [s for s in dev if len(s) > 0]
 
@@ -245,7 +247,7 @@ for epoch in range(args.epochs):
     pat.print_nr_of_cycles = False
     with torch.no_grad():
         parse_conll(pat, dev, args.batch_size, clear=True)
-    dev_uas, dev_las = eval_conll(dev, args.dev, verbose=False)
+    dev_uas, dev_las = eval_conll(dev, args.dev, args.dev_metadata, verbose=False)
     print('  dev uas:', dev_uas)
     print('  dev las:', dev_las)
     if not args.disable_early_stopping:

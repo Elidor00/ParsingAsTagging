@@ -5,9 +5,9 @@ from utils import normalize, chunker
 
 
 
-def read_conll(filename, include_non_projective=True, verbose=True, lower_case=True):
+def read_conll(filename, metadata, include_non_projective=True, verbose=True, lower_case=True):
     """Reads dependency annotations from CoNLL-U format"""
-    return list(iter_conll(filename, include_non_projective, verbose, lower_case))
+    return list(iter_conll(filename, metadata, include_non_projective, verbose, lower_case))
 
 
 '''
@@ -22,7 +22,7 @@ def write_conll(filename, sentences):
 '''
 
 
-def eval_conll(sentences, gold_filename, verbose=True):
+def eval_conll(sentences, gold_filename, metadata, verbose=True):
     with tempfile.NamedTemporaryFile(mode='w') as f:
         for sentence in sentences:
             for entry in sentence:
@@ -30,7 +30,8 @@ def eval_conll(sentences, gold_filename, verbose=True):
                     print(str(entry), file=f)
             print('', file=f)
         f.flush()
-        subprocess.run(["./parse.sh", gold_filename])
+        if metadata:
+            subprocess.run(["./parse.sh", gold_filename])
         p = subprocess.run(['./eval.pl', '-g', gold_filename, '-s', f.name], stdout=subprocess.PIPE)
         o = p.stdout.decode('utf-8')
         if verbose: print(o)
@@ -59,13 +60,14 @@ def clear_dependencies(sentences):
 
 
 
-def iter_conll(filename, include_non_projective=True, verbose=True, lower_case=True):
+def iter_conll(filename, metadata, include_non_projective=True, verbose=True, lower_case=True):
     """Reads dependency annotations in CoNLL-U format and returns a generator."""
     read = 0
     non_proj = 0
     dropped = 0
     root = ConllEntry(id=0, form='<root>', upos='<root>', xpos='<root>', head=0, deprel='rroot')
-    subprocess.run(["./parse.sh", filename])
+    if metadata:
+        subprocess.run(["./parse.sh", filename])
     with open(filename) as f:
         sentence = [root]
         for line in f:

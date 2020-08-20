@@ -13,7 +13,8 @@ from modelDict import model
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('model', help='serialized model')
-parser.add_argument('test', help='test data in conllu format')
+parser.add_argument('test')
+parser.add_argument('--test_metadata', action='store_true', help='specify if test file contains metadata or compound words')
 parser.add_argument('--batch-size', type=int, default=64, help='batch size')
 parser.add_argument('--no-cycles', action='store_true', help='no cycles flag')
 parser.add_argument('--no-cycles-strategy', default="optimal", help='what strategy to use for ensuring no cycles in output. Either greedy or optimal')
@@ -41,7 +42,7 @@ print(f'loading model from {args.model}')
 device = torch.device(f'cuda:{args.which_cuda}' if torch.cuda.is_available() else 'cpu')
 
 print(f'loading test dataset from {args.test}')
-test = read_conll(args.test, lower_case=not params[0].bert_multilingual_cased)
+test = read_conll(args.test, args.test_metadata, lower_case=not params[0].bert_multilingual_cased)
 
 # Add .bert attribute to ConnlEntry if -bert flag is set @see ConllEntry
 if params[0].bert:
@@ -66,5 +67,5 @@ with torch.no_grad():
 
 
 print('evaluating parsing results')
-eval_conll(test, args.test)
+eval_conll(test, args.test, args.test_metadata)
 
