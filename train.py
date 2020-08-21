@@ -124,6 +124,10 @@ if torch.cuda.is_available():
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 
+# Check device
+device = torch.device(f'cuda:{args.which_cuda}' if torch.cuda.is_available() else 'cpu')
+print("Using device: ", torch.cuda.get_device_name(device))
+
 if args.bert_load_features:
     print('\n Loading data from data.pickle and ignoring train and dev parameters')
     with open(os.path.join(args.output, 'bert_features.pickle'), 'rb') as f:
@@ -198,7 +202,6 @@ num_epochs_since_best = 0
 what = args.early_stopping_on
 
 print('\ntraining')
-device = torch.device(f'cuda:{args.which_cuda}' if torch.cuda.is_available() else 'cpu')
 model_type = model[args.choose_model]
 model_module = importlib.import_module(model_type)
 pat = model_module.Pat(args, word_vocab, tag_vocab, pos_vocab, deprel, char_vocab).to(device)

@@ -30,6 +30,7 @@ class Bert(object):
         self.tokenizer = BertTokenizer.from_pretrained(pretrained_model, do_lower_case=not multi_lingual) # lower case for english, keep case for multi lingual
         
         self.device = torch.device(f'cuda:{which_cuda}' if torch.cuda.is_available() else 'cpu')
+        print("Using device: ", torch.cuda.get_device_name(self.device))
         self.model = BertModel.from_pretrained(pretrained_model).to(self.device)
         
         # tells pytorch to run in evaluation mode instead of training

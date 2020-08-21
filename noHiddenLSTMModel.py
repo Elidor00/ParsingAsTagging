@@ -29,6 +29,7 @@ class Pat(nn.Module):
         self.char_vocab = char_vocab
 
         self.device = torch.device(f'cuda:{args.which_cuda}' if torch.cuda.is_available() else 'cpu')
+        print("Using device: ", torch.cuda.get_device_name(self.device))
 
         self.glove_emb = args.glove_emb
         self.word_emb_size = args.word_emb_size

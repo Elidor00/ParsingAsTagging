@@ -7,6 +7,7 @@ class CharEmbeddings(nn.Module):
         super().__init__()
 
         self.device = torch.device(f'cuda:{which_cuda}' if torch.cuda.is_available() else 'cpu')
+        print("Using device: ", torch.cuda.get_device_name(self.device))
 
         self.embedding_dim = embedding_dim
         self.vocab = char_vocab
