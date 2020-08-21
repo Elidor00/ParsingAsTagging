@@ -40,7 +40,7 @@ torch.backends.cudnn.benchmark = False
 
 print(f'loading model from {args.model}')
 device = torch.device(f'cuda:{args.which_cuda}' if torch.cuda.is_available() else 'cpu')
-print("Using device: ", torch.cuda.get_device_name(device))
+print("Using device: ", device)
 
 print(f'loading test dataset from {args.test}')
 test = read_conll(args.test, args.test_metadata, lower_case=not params[0].bert_multilingual_cased)

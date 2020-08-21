@@ -126,7 +126,7 @@ torch.backends.cudnn.benchmark = False
 
 # Check device
 device = torch.device(f'cuda:{args.which_cuda}' if torch.cuda.is_available() else 'cpu')
-print("Using device: ", torch.cuda.get_device_name(device))
+print("Using device: ", device)
 
 if args.bert_load_features:
     print('\n Loading data from data.pickle and ignoring train and dev parameters')
@@ -144,7 +144,7 @@ else:
     # ignore sentences that had only <root>
     #train = [s for s in train if len(s) > 0]
 
-    train = train[:50]
+    # train = train[:50]
     # keep a copy of the train dataset   that will be used for evaluation
     train_copy = deepcopy(train)
 

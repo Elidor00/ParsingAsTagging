@@ -6,7 +6,7 @@ class PositionalEmbeddings(nn.Module):
         super().__init__()
         
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-        print("Using device: ", torch.cuda.get_device_name(self.device))
+        print("Using device: ", self.device)
 
         self.emb_size = emb_size
         self.max_position = max_position
