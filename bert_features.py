@@ -74,14 +74,17 @@ class Bert(object):
         # create a sampler which will be used to create the batches
         eval_sampler = SequentialSampler(eval_data)
         eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=self.batch_size)
-            
+
+        count = 0
         for input_ids, input_mask, token_maps, example_indices in eval_dataloader:
             input_ids = input_ids.to(self.device)
             input_mask = input_mask.to(self.device)
             ### RUN MODEL ###
             # run model to get all 12 layers of bert
+            count += 1
+            if count % 200 == 0:
+                print(count, " / ", len(sentences))
             all_encoder_layers, _ = self.model(input_ids, token_type_ids=None, attention_mask=input_mask)
-
             averaged_output = torch.stack([all_encoder_layers[idx] for idx in self.layer_indexes]).mean(0) / len(self.layer_indexes)
             averaged_output = averaged_output#.detach().cpu()
 
