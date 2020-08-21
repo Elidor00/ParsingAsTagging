@@ -27,6 +27,13 @@ pip install pytorch-pretrained-bert
 pip install networkx
 ```
 
+I'm currently using:
+```
+conda create -n pat python=3.6.9
+pip (--no-cache-dir) install torch==1.4.0 torchvision==0.5.0 pytorch-pretrained-bert==0.6.2 networkx==2.4
+```
+both locally and on Google Colab
+
 <a name="data"></a>
 ### Data
 We used Universal Dependencies 2.2.
@@ -132,3 +139,23 @@ You can predict using the following command:
 predict.py data/UD_2.2/en/pat data/UD_2.2/en/en_ewt-ud-test.conllu --which-cuda 0
 ```
 Additionally, you may also add ```--no-cycles --no-cycles-strategy greedy``` or ```--no-cycles --no-cycles-strategy optimal```
+
+I'm currently using the following command for train:
+```
+python train.py data/UD_2.6/it/it_isdt-ud-train.conllu data/UD_2.6/it/it_isdt-ud-dev.conllu --output data/UD_2.6/it/ --train-metadata --dev-metadata --epochs 100 --max-epochs-without-improvement 5 --bert --random-seed 1 --learning-rate 0.0020 --beta1 0.7 --beta2 0.99 --cnn-ce --which-cuda 0 --use-head --weight-decay 0.000010 --dropout 0.60 --bilstm-num-layers 3 --bilstm-hidden-size 600 --mlp-hidden-size 500 --mlp-output-size 150 --bilstm-dropout 0.3 --choose-model 0
+```
+and the following command for predict:
+```
+python predict.py data/UD_2.6/it/pat data/UD_2.6/it/it_isdt-ud-test.conllu --test_metadata --which-cuda 0 --choose-model 0
+```
+on Google Colab with italian UD with metadata.
+
+If you want to use other UD without metadata to manage you can simply remove the flags:
+```
+--train-metadata --dev-metadata
+```
+for training and
+```
+--test_metadata
+```
+for predict.
