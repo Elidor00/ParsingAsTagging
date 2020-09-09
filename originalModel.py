@@ -479,7 +479,7 @@ class Pat(nn.Module):
         #    x = torch.cat([x, elmo_embeds], 2)
 
         if self.char_emb:
-            c = self.char_embedding(orig_w)
+            c = self.char_embedding(orig_w)  # orig_w batch (list) of sentences
             x = torch.cat([x, c], 2)
 
         if self.cnn_ce:
