@@ -30,7 +30,7 @@ pip install networkx
 I'm currently using:
 ```
 conda create -n pat python=3.6.9
-pip (--no-cache-dir) install torch==1.4.0 torchvision==0.5.0 pytorch-pretrained-bert==0.6.2 networkx==2.4
+pip (--no-cache-dir) install -r requirements.txt
 ```
 both locally and on Google Colab
 
