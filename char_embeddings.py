@@ -2,28 +2,38 @@ import torch
 from torch.nn import functional as F
 from torch import nn
 
-class CharEmbeddings(nn.Module):
+class CharEmbeddings(nn.Module):  # CharacterModel in char_model.py
     def __init__(self, char_vocab, embedding_dim, hidden_size, which_cuda=0):
         super().__init__()
 
         self.device = torch.device(f'cuda:{which_cuda}' if torch.cuda.is_available() else 'cpu')
         print("Using device: ", self.device)
 
-        self.embedding_dim = embedding_dim
+        self.embedding_dim = embedding_dim  # 50
         self.vocab = char_vocab
-        self.hidden_size = hidden_size
+        self.hidden_size = hidden_size  # 25
 
         self.embeddings = nn.Embedding(
-            num_embeddings = len(self.vocab),
-            embedding_dim = embedding_dim,
+            num_embeddings = len(self.vocab),  # uguale
+            embedding_dim = embedding_dim,  # 100 (ner tagger), 400 (Pos tagger), 400 (depparse)
             padding_idx = self.vocab.pad
         )
 
+        """
+        in ner Bidirectional True and Attention False (non lo uso)
+        self.num_dir = 2 if bidirectional else 1
+        
+            if self.attention: 
+        self.char_attn = nn.Linear(self.num_dir * self.args['char_hidden_dim'], 1, bias=False)
+        self.char_attn.weight.data.zero_()
+        """
+
         self.bilstm = nn.LSTM(
-            input_size = embedding_dim,
-            hidden_size = self.hidden_size,
-            num_layers = 1,
+            input_size = embedding_dim,  # 100 (ner tagger), 400 (Pos tagger), 400 (depparse)
+            hidden_size = self.hidden_size,  # 100 (ner), 400 (Pos tagger)
+            num_layers = 1,  # uguale (ner tagger)
             bidirectional = True
+            # dropout = 0 if num_layers == 1 else 0.5
         )
 
     
@@ -158,3 +168,9 @@ class CNNCharEmbeddings(CharEmbeddings):
         x = x.view(len(sentence_batch), -1 , self.cnn_ce_out_channels)
 
         return x
+
+
+"""
+Dozat and Manning char emb
+https://github.com/stanfordnlp/stanza/blob/708c9358bbb9fd43d7bd4333ac621e1b35a77751/stanza/models/common/char_model.py
+"""
