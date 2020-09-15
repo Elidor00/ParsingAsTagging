@@ -26,14 +26,14 @@ class Bert(object):
     def __init__(self, layer_indexes, max_seq_length, batch_size, multi_lingual=False, which_cuda = 0):
         # pretrained_model = 'bert-base-multilingual-cased' if multi_lingual else 'bert-base-uncased'
         pretrained_model = 'bert-base-multilingual-cased' if multi_lingual else \
-            "Musixmatch/umberto-commoncrawl-cased-v1"
+            "Musixmatch/umberto-wikipedia-uncased-v1"
 
         self.max_seq_length = max_seq_length
         self.batch_size = batch_size
         self.layer_indexes = layer_indexes = [int(x) for x in layer_indexes.split(",")]
         # self.tokenizer = BertTokenizer.from_pretrained(pretrained_model, do_lower_case=not multi_lingual) # lower case for english, keep case for multi lingual
         # UmBERTo is a Roberta-based Language Model trained on large Italian Corpora
-        self.tokenizer = AutoTokenizer.from_pretrained(pretrained_model)
+        self.tokenizer = AutoTokenizer.from_pretrained(pretrained_model, do_lower_case=not multi_lingual)
         
         self.device = torch.device(f'cuda:{which_cuda}' if torch.cuda.is_available() else 'cpu')
         print("Using device: ", self.device)
@@ -93,7 +93,8 @@ class Bert(object):
             if count % 200 == 0:
                 print(count, " / ", len(sentences))
             all_encoder_layers, _ = self.model(input_ids, token_type_ids=None, attention_mask=input_mask)
-            averaged_output = torch.stack([all_encoder_layers[idx] for idx in self.layer_indexes]).mean(0) / len(self.layer_indexes)
+            # averaged_output = torch.stack([all_encoder_layers[idx] for idx in self.layer_indexes]).mean(0) / len(self.layer_indexes)
+            averaged_output = all_encoder_layers[0]
             averaged_output = averaged_output#.detach().cpu()
 
             for i, idx in enumerate(example_indices):
