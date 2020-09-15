@@ -248,8 +248,10 @@ for epoch in range(args.epochs):
     # Evaluate
     pat = pat.eval()
     pat.mode = 'evaluation'
-    pat.no_cycles = False
-    pat.print_nr_of_cycles = False
+    # pat.no_cycles = False
+    # pat.print_nr_of_cycles = False
+    pat.no_cycles = True
+    pat.print_nr_of_cycles = True
     with torch.no_grad():
         parse_conll(pat, dev, args.batch_size, clear=True)
     dev_uas, dev_las = eval_conll(dev, args.dev, args.dev_metadata, verbose=False)

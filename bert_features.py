@@ -33,13 +33,13 @@ class Bert(object):
         self.layer_indexes = layer_indexes = [int(x) for x in layer_indexes.split(",")]
         # self.tokenizer = BertTokenizer.from_pretrained(pretrained_model, do_lower_case=not multi_lingual) # lower case for english, keep case for multi lingual
         # UmBERTo is a Roberta-based Language Model trained on large Italian Corpora
-        self.tokenizer = AutoTokenizer.from_pretrained("Musixmatch/umberto-wikipedia-uncased-v1")
+        self.tokenizer = AutoTokenizer.from_pretrained(pretrained_model)
         
         self.device = torch.device(f'cuda:{which_cuda}' if torch.cuda.is_available() else 'cpu')
         print("Using device: ", self.device)
         # self.model = BertModel.from_pretrained(pretrained_model).to(self.device)
         # UmBERTo is a Roberta-based Language Model trained on large Italian Corpora
-        self.model = AutoModel.from_pretrained("Musixmatch/umberto-wikipedia-uncased-v1").to(self.device)
+        self.model = AutoModel.from_pretrained(pretrained_model).to(self.device)
         
         # tells pytorch to run in evaluation mode instead of training
         self.model.eval()
