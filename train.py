@@ -159,6 +159,8 @@ if args.bert and args.bert_load_features != True:
     # 168 here because it's the longest sentence in our training dataset
     # FIXME: add max_seq_length as parameter
     bert = Bert(args.bert_layers, args.bert_max_seq_length, args.bert_batch_size, args.bert_multilingual_cased, args.which_cuda)
+    print("Bert model: ", bert.model)
+    print("Bert tokenizer: ", bert.tokenizer)
     # set bert hidden size
     args.bert_hidden_size = bert.model.config.hidden_size
 

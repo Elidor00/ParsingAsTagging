@@ -5,6 +5,8 @@ from torch.utils.data.distributed import DistributedSampler
 from pytorch_pretrained_bert.tokenization import BertTokenizer
 from pytorch_pretrained_bert.modeling import BertModel
 
+from transformers import AutoTokenizer, AutoModel
+
 from torch.utils.data import DataLoader, TensorDataset, SequentialSampler
 
 from torch.nn import functional as F
@@ -22,16 +24,22 @@ class Bert(object):
     """A facade to Bert model that extracts features for sets of tokens"""
 
     def __init__(self, layer_indexes, max_seq_length, batch_size, multi_lingual=False, which_cuda = 0):
-        pretrained_model = 'bert-base-multilingual-cased' if multi_lingual else 'bert-base-uncased'
+        # pretrained_model = 'bert-base-multilingual-cased' if multi_lingual else 'bert-base-uncased'
+        pretrained_model = 'bert-base-multilingual-cased' if multi_lingual else \
+            "Musixmatch/umberto-commoncrawl-cased-v1"
 
         self.max_seq_length = max_seq_length
         self.batch_size = batch_size
         self.layer_indexes = layer_indexes = [int(x) for x in layer_indexes.split(",")]
-        self.tokenizer = BertTokenizer.from_pretrained(pretrained_model, do_lower_case=not multi_lingual) # lower case for english, keep case for multi lingual
+        # self.tokenizer = BertTokenizer.from_pretrained(pretrained_model, do_lower_case=not multi_lingual) # lower case for english, keep case for multi lingual
+        # UmBERTo is a Roberta-based Language Model trained on large Italian Corpora
+        self.tokenizer = AutoTokenizer.from_pretrained("Musixmatch/umberto-wikipedia-uncased-v1")
         
         self.device = torch.device(f'cuda:{which_cuda}' if torch.cuda.is_available() else 'cpu')
         print("Using device: ", self.device)
-        self.model = BertModel.from_pretrained(pretrained_model).to(self.device)
+        # self.model = BertModel.from_pretrained(pretrained_model).to(self.device)
+        # UmBERTo is a Roberta-based Language Model trained on large Italian Corpora
+        self.model = AutoModel.from_pretrained("Musixmatch/umberto-wikipedia-uncased-v1").to(self.device)
         
         # tells pytorch to run in evaluation mode instead of training
         self.model.eval()
