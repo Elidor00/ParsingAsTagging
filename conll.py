@@ -47,7 +47,8 @@ def parse_conll(parser, sentences, batch_size, clear=True):
     for batch in chunker(sentences, batch_size):
         parser.parse_conll(batch)
     if parser.mode == 'evaluation' and parser.print_nr_of_cycles:
-        print("Nr of cycles: ", parser.nr_of_cycles, ", ", len(sentences), " ", parser.nr_of_cycles / len(sentences))
+        print("Nr of cycles: ", parser.nr_of_cycles, ", ", "nr of sentences",  len(sentences), " ",
+              parser.nr_of_cycles / len(sentences))
 
 
 
