@@ -93,9 +93,11 @@ class Bert(object):
             if count % 200 == 0:
                 print(count, " / ", len(sentences))
             all_encoder_layers, _ = self.model(input_ids, token_type_ids=None, attention_mask=input_mask)
+            # uncomment the follow line using UmBERTo from transformers
+            averaged_output = all_encoder_layers
+            # uncomment the follows lines using bert-base-uncased from pytorch_pretrained_bert
             # averaged_output = torch.stack([all_encoder_layers[idx] for idx in self.layer_indexes]).mean(0) / len(self.layer_indexes)
-            averaged_output = all_encoder_layers[0]
-            averaged_output = averaged_output#.detach().cpu()
+            # averaged_output = averaged_output#.detach().cpu()
 
             for i, idx in enumerate(example_indices):
                 for j, coll_entry in enumerate(conll_dataset[idx]):
