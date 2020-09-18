@@ -35,9 +35,14 @@ def make_deprel_vocabulary(sentences, prune=0):
 
 
 def make_pos_vocabulary(sentences, prune=0, left_threshold = -50, right_threshold = 50):
-    """make position vocabulary from a list of sentences"""
+    """make position vocabulary from a list of sentences
+    We empirically chose a range of (−50, 50), which
+    accounts for 99.9% of the English dependencies in the Universal Dependencies training dataset.
+    We use the same range for all languages.
+    """
     vocab = Vocabulary()
     for sentence in sentences:
+        # in positions there are only RELPOS values between -50 and 50
         positions = [str(e.pos) for e in sentence if left_threshold < e.pos < right_threshold]
         vocab.count_words(positions)
     if prune > 0:

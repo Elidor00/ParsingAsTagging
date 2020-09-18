@@ -190,7 +190,7 @@ tag_vocab = make_tag_vocabulary(train, args.part_of_speech)
 print(f'{len(tag_vocab):,} distinct POS tags')
 char_vocab = make_char_vocabulary(train)
 print(f'{len(char_vocab):,} distinct characters')
-pos_vocab = make_pos_vocabulary(train, prune=args.pos_count_threshold)
+pos_vocab = make_pos_vocabulary(train, prune=args.pos_count_threshold)  # Range [-50, 50], "<unk>", "<pad>" = 101 values
 print(f'{len(pos_vocab):,} distinct positions with count > {args.pos_count_threshold}')
 deprel = make_deprel_vocabulary(train)
 print(f'{len(deprel):,} distinct dependencies')
