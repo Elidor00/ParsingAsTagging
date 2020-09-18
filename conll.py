@@ -32,7 +32,8 @@ def eval_conll(sentences, gold_filename, metadata, verbose=True):
         f.flush()
         if metadata:
             subprocess.run(["./parse.sh", gold_filename])
-        p = subprocess.run(['./eval.pl', '-g', gold_filename, '-s', f.name], stdout=subprocess.PIPE)
+        # -p : punctuation: also score on punctuation (default is not to score on it)
+        p = subprocess.run(['./eval.pl', '-p', '-g', gold_filename, '-s', f.name], stdout=subprocess.PIPE)
         o = p.stdout.decode('utf-8')
         if verbose: print(o)
         m1 = re.search(r'Unlabeled attachment score: (.+)', o)
@@ -47,8 +48,8 @@ def parse_conll(parser, sentences, batch_size, clear=True):
     for batch in chunker(sentences, batch_size):
         parser.parse_conll(batch)
     if parser.mode == 'evaluation' and parser.print_nr_of_cycles:
-        print("Nr of cycles: ", parser.nr_of_cycles, ", ", "nr of sentences",  len(sentences), " ",
-              parser.nr_of_cycles / len(sentences))
+        print("Nr of cycles: ", parser.nr_of_cycles, ", ", "nr of sentences",  len(sentences), ", ",
+              round((parser.nr_of_cycles / len(sentences)), 2), "%")
 
 
 

@@ -963,7 +963,7 @@ printf OUT "  Evaluation of the results in %s\n  vs. gold standard %s:\n\n", $op
 
 printf OUT "  Legend: '%s' - the beginning of a sentence, '%s' - the end of a sentence\n\n", $START, $END ;
 
-printf OUT "  Number of non-scoring tokens: $counts{punct}\n\n";
+printf OUT "  Number of non-scoring tokens (Punctuation): $counts{punct}\n\n";
 
 printf OUT "  The overall accuracy and its distribution over CPOSTAGs\n\n" ;
 printf OUT "%s\n", "  -----------+-------+-------+------+-------+------+-------+-------" ;
