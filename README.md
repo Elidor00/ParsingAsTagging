@@ -7,6 +7,7 @@
 4. [Architecture](#architecture)
 5. [Hyperparameters](#hyperparameters)
 6. [Run](#run)
+7. [Results](#results)
 
 <a name="highlights"></a>
 ### Highlights
@@ -159,3 +160,34 @@ for training and
 --test_metadata
 ```
 for predict.
+
+<a name="results"></a>
+### Results
+
+The table below shows the results obtained for the Italian ISDT UD 2.6 with various configurations and modifications of the initial PaT architecture.
+
+<details>
+  <summary>Table with results for the IT ISDT UD 2.6</summary>
+  
+| Model Type    |        Bert Model            | char_emb | cnn_ce | early_stopping_on | position_emb | no_cycles / strategy / nr |   LAS  |   UAS  | Label Acc Score | Non-scoring tokens (punct)| 
+|---------------|------------------------------|----------|--------|-------------------|--------------|---------------------------|--------|--------|-----------------|---------------------------|
+| complete code | bert-base-uncased            |  False   |  True  |       UAS         |     False    |     False / - / -         | 90.36% | 92.92% |      93.99%     |             1180          |
+| noLSTMnoHidden| bert-base-uncased            |  False   |  True  |       UAS         |     False    |     False / - / -         | 59.38% | 61.52% |      76.27%     |             1180          |
+| noLSTM        | bert-base-uncased            |  False   |  True  |       UAS         |     False    |     False / - / -         | 65.97% | 68.25% |      81.94%     |             1180          |
+| complete code | bert-base-uncased            |  True    |  True  |       UAS         |     False    |     False / - / -         | 90.38% | 92.97% |      93.98%     |             1180          |
+| noLSTM        | bert-base-uncased            |  True    |  True  |       UAS         |     False    |     False / - / -         | 65.44% | 67.60% |      81.44%     |             1180          |
+| complete code | bert-base-uncased            |  False   |  False |       UAS         |     False    |     False / - / -         | 88.28% | 91.70% |      92.42%     |             1180          |
+| complete code | bert-base-uncased            |  True    |  False |       UAS         |     False    |     False / - / -         | 90.40% | 92.91% |      94.02%     |             1180          |
+| complete code | umberto-wikipedia-uncased-v1 |  True    |  False |       UAS         |     False    |     True / Optimal / 0    | 92.81% | 94.98% |      95.60%     |             1180          |
+| complete code | umberto-wikipedia-uncased-v1 |  True    |  False |       UAS         |     False    |     True / Greedy  / 0    | 92.82% | 94.98% |      95.60%     |             1180          |
+| complete code | umberto-wikipedia-uncased-v1 |  True    |  False |       UAS         |     False    |     False / - / -         | 92.89% | 95.01% |      95.60%     |             1180          |
+| complete code | umberto-wikipedia-uncased-v1 |  True    |  True  |       UAS         |     False    |     True / Optimal / 0    | 93.14% | 95.06% |      96.14%     |             1180          |
+| complete code | umberto-wikipedia-uncased-v1 |  True    |  True  |       UAS         |     False    |     True / Greedy  / 0    | 93.15% | 95.06% |      96.14%     |             1180          |
+| complete code | umberto-wikipedia-uncased-v1 |  True    |  True  |       UAS         |     False    |     False / - / 13        | 93.13% | 95.01% |      96.14%     |             1180          |
+| complete code | umberto-wikipedia-uncased-v1 |  True    |  True  |       UAS         |     False    |     True  / - / -         | 93.26% | 91.22% |      /          |             0             |
+| noLSTM        | umberto-wikipedia-uncased-v1 |  True    |  True  |       UAS         |     False    |     True / Optimal  / 0   | 67.97% | 70.33% |      88.25%     |             0             |
+| noLSTM        | umberto-wikipedia-uncased-v1 |  True    |  True  |       UAS         |     False    |     True / Greedy  / 0    | 68.23% | 70.14% |      88.25%     |             0             |
+| noLSTM        | umberto-wikipedia-uncased-v1 |  True    |  True  |       UAS         |     False    |     False / - / -         | 68.25% | 69.63% |      88.25%     |             0             |
+
+</details>
+ 
