@@ -466,10 +466,11 @@ class Pat(nn.Module):
 
         if self.position_emb:
             # get positional embeddings
+            print(w.min(), w.max())
             position = self.positional_embedding(w)
             # concat positional embeddings with word embeddings
 
-            we = torch.cat((position, we), 2)
+            we = torch.cat((position, we), 2)  # raise index error
 
         # concat tags embeddings and word embeddings
         x = torch.cat((we, t), 2)
