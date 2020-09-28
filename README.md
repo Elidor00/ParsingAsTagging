@@ -165,6 +165,10 @@ for predict.
 ### Results
 
 The table below shows the results obtained for the Italian ISDT UD 2.6 with various configurations and modifications of the initial PaT architecture.
+The metrics considered are:
+- **Labeled attachment score (LAS)**: percentage of the predicted words that have the same label and head as the reference dependency relationship
+- **Unlabeled attachment score (UAS)**: percentage of predicted words that have the same head as the reference dependency relationship
+- **Label accuracy score**: percentage of predicted words that have the same label as the reference dependency relationship
 
 <details>
   <summary>Table with results for the IT ISDT UD 2.6</summary>
@@ -188,6 +192,12 @@ The table below shows the results obtained for the Italian ISDT UD 2.6 with vari
 | noLSTM        | umberto-wikipedia-uncased-v1 |  True    |  True  |       UAS         |     False    |     True / Optimal  / 0   | 67.97% | 70.33% |      88.25%     |             0             |
 | noLSTM        | umberto-wikipedia-uncased-v1 |  True    |  True  |       UAS         |     False    |     True / Greedy  / 0    | 68.23% | 70.14% |      88.25%     |             0             |
 | noLSTM        | umberto-wikipedia-uncased-v1 |  True    |  True  |       UAS         |     False    |     False / - / -         | 68.25% | 69.63% |      88.25%     |             0             |
+| complete code | umberto-wikipedia-uncased-v1 |  True    |  True  |       UAS         | True (380-20)|     True / Greedy / 0     | 92.02% | 93.92% |      96.19%     |             0             |
+| complete code | umberto-wikipedia-uncased-v1 |  True    |  True  |       UAS         | True (380-20)|     False / - / -         | 92.02% | 93.90% |      96.19%     |             0             |
+| complete code | umberto-wikipedia-uncased-v1 |  True    |  True  |       UAS         | True (380-20)|     True / Greedy / 0     | 92.98% | 94.93% |      95.76%     |             1180          |
+| complete code | umberto-wikipedia-uncased-v1 |  True    |  True  |       UAS         | True (380-20)|     False / - / 14        | 92.98% | 94.91% |      95.76%     |             1180          |
+| complete code | umberto-wikipedia-uncased-v1 |  True    |  True  |       UAS         | True (380-50)|     True / Greedy / 0     | 93.07% | 95.12% |      95.83%     |             1180          |
+| complete code | umberto-wikipedia-uncased-v1 |  True    |  True  |       UAS         | True (380-50)|     False / - / 19        | 93.01% | 95.02% |      95.83%     |             1180          |
 
 </details>
  
