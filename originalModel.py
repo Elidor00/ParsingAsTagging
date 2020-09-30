@@ -47,7 +47,7 @@ class Pat(nn.Module):
         #self.elmo_opts = args.elmo_opts
         #self.elmo_weights = args.elmo_weights
         # position embeddings
-        self.position_emb_max_pos = args.position_emb_max_pos
+        self.position_emb_max_pos = len(word_vocab)  # args.position_emb_max_pos
         self.position_emb = args.position_emb
         self.position_emb_size = args.position_emb_size
         # bert
@@ -466,11 +466,11 @@ class Pat(nn.Module):
 
         if self.position_emb:
             # get positional embeddings
-            print(w.min(), w.max())
+            # print(w.min(), w.max())
             position = self.positional_embedding(w)
             # concat positional embeddings with word embeddings
 
-            we = torch.cat((position, we), 2)  # raise index error
+            we = torch.cat((position, we), 2)  # raise index error -> print(w.min(), w.max())
 
         # concat tags embeddings and word embeddings
         x = torch.cat((we, t), 2)
