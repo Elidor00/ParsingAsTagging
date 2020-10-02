@@ -49,7 +49,7 @@ class Pat(nn.Module):
         #self.elmo_weights = args.elmo_weights
 
         # position embeddings
-        self.position_emb_max_pos = len(self.word_vocab)  # args.position_emb_max_pos
+        self.position_emb_max_pos = args.position_emb_max_pos  # args.word_emb_size  # len(self.word_vocab)
         self.position_emb = args.position_emb
         self.position_emb_size = args.position_emb_size
 
