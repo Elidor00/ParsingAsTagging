@@ -58,8 +58,10 @@ parser.add_argument('--char-emb-hidden-size', type=int, default=25, help='output
 parser.add_argument('--char-emb-size', type=int, default=50, help='size of embedddings used for each char within the model')
 
 parser.add_argument('--position-emb', action='store_true', help='use position embeddings')
-parser.add_argument('--position-emb-max-pos', type=int, default=380, help='max position that can be encoded to embeddings')
-parser.add_argument('--position-emb-size', type=int, default=20, help='position embeddings size')
+parser.add_argument('--position-emb-max-pos', type=int, help='max position that can be encoded to embeddings')  # input = number of different words
+parser.add_argument('--position-emb-size', type=int, default=380, help='position embeddings size')  # output = max sentence length
+
+parser.add_argument('--position-enc', action='store_true', help='use position encoding')
 
 parser.add_argument('--bert', action='store_true', help='use bert features')
 parser.add_argument('--bert-batch-size', type=int, default=1, help='bert batch size')

@@ -7,6 +7,7 @@ from bert_features import from_tensor_list_to_one_tensor
 from char_embeddings import CharEmbeddings, CNNCharEmbeddings
 from embeddings import *
 from positional_embeddings import PositionalEmbeddings
+from positional_encoding import PositionalEncoding
 from utils import first
 import networkx as nx
 from collections import defaultdict
@@ -46,10 +47,17 @@ class Pat(nn.Module):
         # elmo
         #self.elmo_opts = args.elmo_opts
         #self.elmo_weights = args.elmo_weights
+
         # position embeddings
-        self.position_emb_max_pos = len(word_vocab)  # args.position_emb_max_pos
+        self.position_emb_max_pos = len(self.word_vocab)  # args.position_emb_max_pos
         self.position_emb = args.position_emb
         self.position_emb_size = args.position_emb_size
+
+        # position encoding
+        self.position_enc_max_pos = args.word_emb_size
+        self.position_enc = args.position_enc
+        # self.position_enc_size = args.position_enc_size
+
         # bert
         self.bert = args.bert
         self.bert_hidden_size = args.bert_hidden_size
@@ -125,6 +133,11 @@ class Pat(nn.Module):
             embedding_dim=self.word_emb_size,
             padding_idx=self.word_vocab.pad,
         )
+
+        if self.position_enc:
+            self.positional_encoding = PositionalEncoding(
+                d_model=self.position_enc_max_pos
+            ).to(self.device)
 
         if self.position_emb:
             self.positional_embedding = PositionalEmbeddings(
@@ -456,6 +469,13 @@ class Pat(nn.Module):
         we = self.word_embedding(w)
         t = self.tag_embedding(t)
 
+        if self.position_enc:
+            # get position encoding
+            position_enc = self.positional_encoding(we)
+            # concat positional encoding with word embeddings
+
+            we = we + position_enc
+
         if self.bert:
             # get bert features from model
             bert_features_list = [[e.bert for e in sentence] for sentence in sentences]
@@ -466,7 +486,7 @@ class Pat(nn.Module):
 
         if self.position_emb:
             # get positional embeddings
-            # print(w.min(), w.max())
+            # print(w.min(), w.max()) # args.position_emb_size = w.max()
             position = self.positional_embedding(w)
             # concat positional embeddings with word embeddings
 
