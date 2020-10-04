@@ -25,6 +25,11 @@ class PositionalEncoding(nn.Module):
         super(PositionalEncoding, self).__init__()
         self.dropout = nn.Dropout(p=dropout)
 
+        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        print("Using device: ", self.device)
+
+        print("Max position encoding: ", d_model)
+
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
         div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
@@ -46,3 +51,5 @@ class PositionalEncoding(nn.Module):
 
         x = x + self.pe[:x.size(0), :]
         return self.dropout(x)
+
+# https://github.com/pytorch/examples/blob/master/word_language_model/model.py

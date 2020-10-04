@@ -12,6 +12,9 @@ class PositionalEmbeddings(nn.Module):
         self.emb_size = emb_size
         self.max_position = max_position
         self.pad_index = pad_index
+
+        print("Embedding size: ", self.emb_size)
+        print("Max position embedding: ", self.max_position)
         
         self.embeddings = nn.Embedding(
             num_embeddings=self.max_position,
