@@ -54,7 +54,7 @@ class Pat(nn.Module):
         self.position_emb_size = args.position_emb_size
 
         # position encoding
-        self.position_enc_max_pos = args.word_emb_size
+        self.position_enc_max_pos = args.word_emb_size  # word emb size = 100
         self.position_enc = args.position_enc
         # self.position_enc_size = args.position_enc_size
 
@@ -136,7 +136,8 @@ class Pat(nn.Module):
 
         if self.position_enc:
             self.positional_encoding = PositionalEncoding(
-                d_model=self.position_enc_max_pos
+                d_model=self.position_enc_max_pos,
+                max_len=len(self.word_vocab)
             ).to(self.device)
 
         if self.position_emb:
@@ -472,8 +473,7 @@ class Pat(nn.Module):
         if self.position_enc:
             # get position encoding
             position_enc = self.positional_encoding(we)
-            # concat positional encoding with word embeddings
-
+            # sum positional encoding with word embeddings
             we = we + position_enc
 
         if self.bert:

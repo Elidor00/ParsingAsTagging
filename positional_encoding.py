@@ -29,6 +29,7 @@ class PositionalEncoding(nn.Module):
         print("Using device: ", self.device)
 
         print("Max position encoding: ", d_model)
+        print("Max len: ", max_len)
 
         pe = torch.zeros(max_len, d_model)
         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
