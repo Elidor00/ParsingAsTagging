@@ -136,8 +136,7 @@ class Pat(nn.Module):
 
         if self.position_enc:
             self.positional_encoding = PositionalEncoding(
-                d_model=self.position_enc_max_pos,
-                max_len=len(self.word_vocab)
+                d_model=self.position_enc_max_pos
             ).to(self.device)
 
         if self.position_emb:
