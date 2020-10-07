@@ -174,35 +174,45 @@ The metrics considered are:
 
 
 <details>
-  <summary>Table with results for the IT ISDT UD 2.6</summary>
+  <summary>Table with results for the IT ISDT UD 2.6 with bert-base-uncased (bbu)</summary>
   
-| Model Type    |        Bert Model            | char_emb | cnn_ce |   position_emb   | no_cycles / strategy / nr |   LAS  |   UAS  | Label Acc Score | Non-scoring tokens (punct)| 
-|---------------|------------------------------|----------|--------|------------------|---------------------------|--------|--------|-----------------|---------------------------|
-| complete code | bert-base-uncased            |   False  |  True  |     False        |     False / - / -         | 90.36% | 92.92% |      93.99%     |             1180          |
-| noLSTMnoHidden| bert-base-uncased            |   False  |  True  |     False        |     False / - / -         | 59.38% | 61.52% |      76.27%     |             1180          |
-| noLSTM        | bert-base-uncased            |   False  |  True  |     False        |     False / - / -         | 65.97% | 68.25% |      81.94%     |             1180          |
-| complete code | bert-base-uncased            |   True   |  True  |     False        |     False / - / -         | 90.38% | 92.97% |      93.98%     |             1180          |
-| noLSTM        | bert-base-uncased            |   True   |  True  |     False        |     False / - / -         | 65.44% | 67.60% |      81.44%     |             1180          |
-| complete code | bert-base-uncased            |   False  |  False |     False        |     False / - / -         | 88.28% | 91.70% |      92.42%     |             1180          |
-| complete code | bert-base-uncased            |   True   |  False |     False        |     False / - / -         | 90.40% | 92.91% |      94.02%     |             1180          |
-| complete code | umberto-wikipedia-uncased-v1 |   True   |  False |     False        |     True / Optimal / 0    | 92.81% | 94.98% |      95.60%     |             1180          |
-| complete code | umberto-wikipedia-uncased-v1 |   True   |  False |     False        |     True / Greedy  / 0    | 92.82% | 94.98% |      95.60%     |             1180          |
-| complete code | umberto-wikipedia-uncased-v1 |   True   |  False |     False        |     False / - / -         | 92.89% | 95.01% |      95.60%     |             1180          |
-| complete code | umberto-wikipedia-uncased-v1 |   True   |  True  |     False        |     True / Optimal / 0    | 93.14% | 95.06% |      96.14%     |             1180          |
-| complete code | umberto-wikipedia-uncased-v1 |   True   |  True  |     False        |     True / Greedy  / 0    | 93.15% | 95.06% |      96.14%     |             1180          | # allineati con il prof
-| complete code | umberto-wikipedia-uncased-v1 |   True   |  True  |     False        |     False / - / 13        | 93.13% | 95.01% |      96.14%     |             1180          |
-| complete code | umberto-wikipedia-uncased-v1 |   True   |  True  |     False        |     True  / Greedy / 0    | 91.84% | 93.97% |      95.94%     |             0             | 
-| noLSTM        | umberto-wikipedia-uncased-v1 |   True   |  True  |     False        |     True / Optimal  / 0   | 67.97% | 70.33% |      88.25%     |             0             |
-| noLSTM        | umberto-wikipedia-uncased-v1 |   True   |  True  |     False        |     True / Greedy  / 0    | 68.23% | 70.14% |      88.25%     |             0             |
-| noLSTM        | umberto-wikipedia-uncased-v1 |   True   |  True  |     False        |     False / - / -         | 68.25% | 69.63% |      88.25%     |             0             |
-| complete code | umberto-wikipedia-uncased-v1 |   True   |  True  | True (380-20)    |     True / Greedy / 0     | 92.02% | 93.92% |      96.19%     |             0             |
-| complete code | umberto-wikipedia-uncased-v1 |   True   |  True  | True (380-20)    |     False / - / -         | 92.02% | 93.90% |      96.19%     |             0             |
-| complete code | umberto-wikipedia-uncased-v1 |   True   |  True  | True (380-20)    |     True / Greedy / 0     | 92.98% | 94.93% |      95.76%     |             1180          |
-| complete code | umberto-wikipedia-uncased-v1 |   True   |  True  | True (380-20)    |     False / - / 14        | 92.98% | 94.91% |      95.76%     |             1180          |
-| complete code | umberto-wikipedia-uncased-v1 |   True   |  True  | True (380-50)    |     True / Greedy / 0     | 93.07% | 95.12% |      95.83%     |             1180          |
-| complete code | umberto-wikipedia-uncased-v1 |   True   |  True  | True (380-50)    |     False / - / 19        | 93.01% | 95.02% |      95.83%     |             1180          |
-| complete code | umberto-wikipedia-uncased-v1 |   True   |  True  | True (25413w-380)|     True / Greedy / 0     | 93.24% | 95.14% |      96.06%     |             1180          | # allineati con il prof
-| complete code | umberto-wikipedia-uncased-v1 |   True   |  True  | True (25413w-380)|     True / Greedy / 0     | 92.08% | 93.76% |      96.50%     |             0             | 
+| Model Type    | Bert Model | char_emb | cnn_ce |   position_emb   | position_enc | no_cycles / strategy / nr |   LAS  |   UAS  | Label Acc Score | Non-scoring tokens (punct)| 
+|---------------|------------|----------|--------|------------------|--------------|---------------------------|--------|--------|-----------------|---------------------------|
+| complete code |    bbu     |   False  |  True  |     False        |    False     |     False / - / -         | 90.36% | 92.92% |      93.99%     |             1180          |
+| noLSTMnoHidden|    bbu     |   False  |  True  |     False        |    False     |     False / - / -         | 59.38% | 61.52% |      76.27%     |             1180          |
+| noLSTM        |    bbu     |   False  |  True  |     False        |    False     |     False / - / -         | 65.97% | 68.25% |      81.94%     |             1180          |
+| complete code |    bbu     |   True   |  True  |     False        |    False     |     False / - / -         | 90.38% | 92.97% |      93.98%     |             1180          |
+| noLSTM        |    bbu     |   True   |  True  |     False        |    False     |     False / - / -         | 65.44% | 67.60% |      81.44%     |             1180          |
+| complete code |    bbu     |   False  |  False |     False        |    False     |     False / - / -         | 88.28% | 91.70% |      92.42%     |             1180          |
+| complete code |    bbu     |   True   |  False |     False        |    False     |     False / - / -         | 90.40% | 92.91% |      94.02%     |             1180          |
 
 </details>
  
+
+<details>
+  <summary>Table with results for the IT ISDT UD 2.6 with umberto-wikipedia-uncased-v1 (umberto)</summary>
+  
+| Model Type    | Bert Model | char_emb | cnn_ce |   position_emb   | position_enc |  no_cycles / strategy / nr |   LAS  |   UAS  | Label Acc Score | Non-scoring tokens (punct)| 
+|---------------|------------|----------|--------|------------------|--------------|----------------------------|--------|--------|-----------------|---------------------------|
+| complete code |   umberto  |   True   |  False |     False        |    False     |      True / Optimal / 0    | 92.81% | 94.98% |      95.60%     |             1180          |
+| complete code |   umberto  |   True   |  False |     False        |    False     |      True / Greedy  / 0    | 92.82% | 94.98% |      95.60%     |             1180          |
+| complete code |   umberto  |   True   |  False |     False        |    False     |      False / - / -         | 92.89% | 95.01% |      95.60%     |             1180          |
+| complete code |   umberto  |   True   |  True  |     False        |    False     |      True / Optimal / 0    | 93.14% | 95.06% |      96.14%     |             1180          |
+| complete code |   umberto  |   True   |  True  |     False        |    False     |      True / Greedy  / 0    | 93.15% | 95.06% |      96.14%     |             1180          | # allineati con il prof
+| complete code |   umberto  |   True   |  True  |     False        |    False     |      False / - / 13        | 93.13% | 95.01% |      96.14%     |             1180          |
+| complete code |   umberto  |   True   |  True  |     False        |    False     |      True  / Greedy / 0    | 91.84% | 93.97% |      95.94%     |             0             | 
+| noLSTM        |   umberto  |   True   |  True  |     False        |    False     |      True / Optimal  / 0   | 67.97% | 70.33% |      88.25%     |             0             |
+| noLSTM        |   umberto  |   True   |  True  |     False        |    False     |      True / Greedy  / 0    | 68.23% | 70.14% |      88.25%     |             0             |
+| noLSTM        |   umberto  |   True   |  True  |     False        |    False     |      False / - / -         | 68.25% | 69.63% |      88.25%     |             0             |
+| complete code |   umberto  |   True   |  True  | True (380-20)    |    False     |      True / Greedy / 0     | 92.02% | 93.92% |      96.19%     |             0             |
+| complete code |   umberto  |   True   |  True  | True (380-20)    |    False     |      False / - / -         | 92.02% | 93.90% |      96.19%     |             0             |
+| complete code |   umberto  |   True   |  True  | True (380-20)    |    False     |      True / Greedy / 0     | 92.98% | 94.93% |      95.76%     |             1180          |
+| complete code |   umberto  |   True   |  True  | True (380-20)    |    False     |      False / - / 14        | 92.98% | 94.91% |      95.76%     |             1180          |
+| complete code |   umberto  |   True   |  True  | True (380-50)    |    False     |      True / Greedy / 0     | 93.07% | 95.12% |      95.83%     |             1180          |
+| complete code |   umberto  |   True   |  True  | True (380-50)    |    False     |      False / - / 19        | 93.01% | 95.02% |      95.83%     |             1180          |
+| complete code |   umberto  |   True   |  True  | True (25413w-380)|    False     |      True / Greedy / 0     | 93.24% | 95.14% |      96.06%     |             1180          | # allineati con il prof
+| complete code |   umberto  |   True   |  True  | True (25413w-380)|    False     |      True / Greedy / 0     | 92.08% | 93.76% |      96.50%     |             0             | 
+| noLSTM        |   umberto  |   True   |  True  | True (25413w-380)|    False     |      True / Greedy / 0     | 72.98% | 75.22% |      86.31%     |             1180          | 
+| complete code |   umberto  |   True   |  True  |     False        |True(5000,100)|      True / Greedy / 0     | 92.89% | 94.72% |      95.97%     |             1180          | 
+
+</details>
