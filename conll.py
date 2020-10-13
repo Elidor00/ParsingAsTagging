@@ -10,6 +10,7 @@ def read_conll(filename, metadata, include_non_projective=True, verbose=True, lo
     return list(iter_conll(filename, metadata, include_non_projective, verbose, lower_case))
 
 
+'''
 def write_conll(filename, sentences):
     """Write sentences to conllx file"""
     with open(filename, 'w') as f:
@@ -18,10 +19,11 @@ def write_conll(filename, sentences):
                 if entry.id > 0:
                     print(str(entry), file=f)
             print('', file=f)
+'''
 
 
-def write_conll_single(filename, sentence):
-    """Write sentences to conllx file"""
+def write_conll_sentence(filename, sentence):
+    """Write sentence to conllx file"""
     with open(filename, 'a') as f:
         for entry in sentence:
             if entry.id > 0:

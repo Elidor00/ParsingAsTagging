@@ -3,18 +3,54 @@
 # base use
 #   python printtags.py data/UD_2.6/it/it_isdt-ud-test.conllu
 
+# to divide the dataset into sets based on the length of the sentences and the percentage of punctuation marks contained in each set
+#   python printtags.py data/UD_2.6/it/it_isdt-ud-test.conllu --create-file --range 1 (1 or 2 or 3)
+
 # to count tag combinations:
 #   ./printtags.py ~/data/pat/train.conllu | sort | uniq -c | sort -n
 
 import argparse
-from conll import iter_conll, write_conll_single
+from conll import iter_conll, write_conll_sentence
 
 parser = argparse.ArgumentParser()
 parser.add_argument('datafile')
 parser.add_argument('--no-deprel', dest='deprel', action='store_false', help="don't print dependencies")
 parser.add_argument('--no-pos', dest='pos', action='store_false', help="don't print relative positions")
 parser.add_argument('--metadata', action='store_true', help='specify if file contains metadata or compound words')
+parser.add_argument('--create-file', action='store_true', help='specify if create a file with sentence with a specific --range of punct')
+parser.add_argument('--range', type=int, default=0, help='choose a set of sentence length between 1, 2, 3')
 args = parser.parse_args()
+print(args)
+
+
+def calc_percentage(sentences_range):
+    tot_0_9 = 0
+    tot_10_24 = 0
+    tot_25 = 0
+    for sentence in sentences_range:
+        p = 0
+        for entry in sentence:
+            if entry.id > 0:
+                if entry.deprel == "punct":
+                    p += 1
+        percentage_punct_sentence = int(round((p / len(sentence)) * 100, 0))
+        print("N. punct marks: ", p)
+        print("Sentence length: ", len(sentence))
+        print("% punct marks in sentence: ", percentage_punct_sentence)
+        print("--------------------------------------------------------")
+        if percentage_punct_sentence in range(0, 10):
+            tot_0_9 += 1
+            write_conll_sentence("punctPercentage0_9", sentence)
+        elif percentage_punct_sentence in range(10, 25):
+            tot_10_24 += 1
+            write_conll_sentence("punctPercentage10_24", sentence)
+        else:
+            tot_25 += 1
+            write_conll_sentence("punctPercentage25", sentence)
+    print("N. sentencen with punct mark % between 0 - 9: ", tot_0_9)
+    print("N. sentencen with punct mark % between 10 - 24: ", tot_10_24)
+    print("N. sentencen with punct mark % > 25: ", tot_25)
+
 
 rel_pos = []
 punct = 0
@@ -52,30 +88,11 @@ for sentence in iter_conll(args.datafile, args.metadata, verbose=False):
 print("N. relative position out of empirical range: ", out_of_range)
 print("N. of punct deprel tag: ", punct)
 
-tot_0_9 = 0
-tot_10_24 = 0
-tot_25 = 0
-for sentence in first_range_sentences:
-    p = 0
-    for entry in sentence:
-        if entry.id > 0:
-            if entry.deprel == "punct":
-                p += 1
-    print("p: ", p)
-    print("len: ", len(sentence))
-    print(int((p / len(sentence))*100))
-    if int((p / len(sentence))*100) in range(0, 10):
-        tot_0_9 += 1
-        write_conll_single("TMP0_9", sentence)
-    elif int((p / len(sentence))*100) in range(10, 25):
-        tot_10_24 += 1
-        write_conll_single("TMP10_24", sentence)
+if args.create_file and args.range != 0:
+    if args.range == 1:
+        calc_percentage(first_range_sentences)
+    elif args.range == 2:
+        calc_percentage(second_range_sentences)
     else:
-        tot_25 += 1
-        write_conll_single("TMP25", sentence)
-print("0 - 9: ", tot_0_9)
-print("10 - 24: ", tot_10_24)
-print(" > 25: ", tot_25)
-
-
+        calc_percentage(third_range_sentences)
 
