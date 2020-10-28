@@ -214,6 +214,8 @@ The metrics considered are:
 | complete code |   umberto  |   True   |  True  | True (25413w-380)|    False     |      True / Greedy / 0     | 93.24% | 95.14% |      96.06%     |                 1180              | # allineati 
 | complete code |   umberto  |   True   |  True  | True (25413w-380)|    False     |      True / Greedy / 0     | 92.08% | 93.76% |      96.50%     |                 0                 | 
 | noLSTM        |   umberto  |   True   |  True  | True (25413w-380)|    False     |      True / Greedy / 0     | 72.98% | 75.22% |      86.31%     |                 1180              | 
-| complete code |   umberto  |   True   |  True  |     False        |True(5000,100)|      True / Greedy / 0     | 92.89% | 94.72% |      95.97%     |                 1180              | 
+| complete code |   umberto  |   True   |  True  |     False        |True(5000,100)|      True / Greedy / 0     | 92.89% | 94.72% |      95.97%     |                 1180              |
+| complete code |   umberto  |   False  |  False |     False        |    False     |      True / Greedy / 0     | 91.97% | 93.91% |      96.07%     |                 0                 | 
+ 
 
 </details>
