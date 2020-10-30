@@ -2,9 +2,11 @@ import pickle
 import re
 from torch import nn
 from torch.nn import functional as F
+from torch.nn.utils.rnn import PackedSequence
 
 from bert_features import from_tensor_list_to_one_tensor
 from char_embeddings import CharEmbeddings, CNNCharEmbeddings
+from character_model import CharacterModel
 from embeddings import *
 from positional_embeddings import PositionalEmbeddings
 from positional_encoding import PositionalEncoding
@@ -17,7 +19,7 @@ Original PaT Model
 '''
 
 class Pat(nn.Module):
-    def __init__(self, args, word_vocab, tag_vocab, pos_vocab, deprel_vocab, char_vocab):
+    def __init__(self, args, word_vocab, tag_vocab, pos_vocab, deprel_vocab, char_vocab, sentences):
         super().__init__()
 
         self.i=0
@@ -27,6 +29,7 @@ class Pat(nn.Module):
         self.pos_vocab = pos_vocab
         self.deprel_vocab = deprel_vocab
         self.char_vocab = char_vocab
+        self.sentences = sentences
 
         self.device = torch.device(f'cuda:{args.which_cuda}' if torch.cuda.is_available() else 'cpu')
         print("Using device: ", self.device)
@@ -116,6 +119,9 @@ class Pat(nn.Module):
         if self.cnn_ce:
             self.bilstm_input_size += self.cnn_ce_out_channels
 
+        if True:
+            self.bilstm_input_size += 125
+
         # if elmo files are set
         #if self.elmo_opts:
         #    print('using elmo')
@@ -159,6 +165,16 @@ class Pat(nn.Module):
             cnn_ce_out_channels=self.cnn_ce_out_channels,
             which_cuda=args.which_cuda
         ).to(self.device)
+
+        self.charmodel = CharacterModel(
+            args=self.args,
+            word_vocab=self.word_vocab,
+            sentences=self.sentences,
+        ).to(self.device)
+
+        self.trans_char = nn.Linear(400, 125, bias=False)
+
+        self.drop = nn.Dropout(p=0.5, inplace=False)
 
         # if glove is defined
         if self.glove_emb:
@@ -505,6 +521,24 @@ class Pat(nn.Module):
         if self.cnn_ce:
             c = self.cnn_char_embedding(orig_w)
             x = torch.cat([x, c], 2)
+
+        if True:
+            inputs = []
+            char_reps = self.charmodel(w, sentences)
+            char_reps = PackedSequence(self.trans_char(self.drop(char_reps.data)), char_reps.batch_sizes)
+            char_reps.data.unsqueeze_(1)
+            char_reps.batch_sizes.unsqueeze_(0).unsqueeze_(2)
+            inputs += [char_reps]
+            # print(char_reps.data.shape)  # 64, 1, 125
+            # print("d: ", d.shape)
+            res = torch.cat([x.data for x in inputs], 1)
+            # res = torch.cat([d[i] for i in range(0, len(inputs))], 1)
+            # print("res: ", res.shape)  # 64, 1, 125
+            res = res.repeat(1, 54, 1)
+            # print("res: ", res.shape)  # 64, 54, 125
+            # print("x: ", x.shape)  # 64, 54, 190
+            x = torch.cat([x, res], 2)
+            # print("x: ", x.shape)  # 64, 54, 315
 
         if self.polyglot:
             polyglot_features_list = self.get_polyglot_embeddings(orig_w)

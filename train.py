@@ -208,7 +208,7 @@ what = args.early_stopping_on
 print('\ntraining')
 model_type = model[args.choose_model]
 model_module = importlib.import_module(model_type)
-pat = model_module.Pat(args, word_vocab, tag_vocab, pos_vocab, deprel, char_vocab).to(device)
+pat = model_module.Pat(args, word_vocab, tag_vocab, pos_vocab, deprel, char_vocab, train).to(device)
 print("Model:")
 print(pat)
 pat.mode = 'training'
@@ -220,6 +220,7 @@ optimizer = torch.optim.Adam(
     betas=(args.beta1, args.beta2),
     weight_decay=args.weight_decay
 )
+
 for epoch in range(args.epochs):
     pat = pat.train()
     pat.mode = 'training'
