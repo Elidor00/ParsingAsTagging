@@ -12,7 +12,9 @@ import networkx as nx
 from collections import defaultdict
 
 '''
-In this model I removed the biLSTM and the hidden layers connected to it
+In this model I removed the biLSTM and the hidden layers connected to it.
+This model, in theory, should be equal to fine-tuned UmBERTo.
+UPDATED: This is wrong because in all models UmBERTo is only used to extract features and no fine tuning is done. 
 '''
 
 class Pat(nn.Module):
@@ -32,8 +34,8 @@ class Pat(nn.Module):
         print("Using device: ", self.device)
 
         self.glove_emb = args.glove_emb
-        self.word_emb_size = args.word_emb_size
-        self.tag_emb_size = args.tag_emb_size
+        self.word_emb_size = args.word_emb_size  # 100
+        self.tag_emb_size = args.tag_emb_size  # 40
         self.bilstm_hidden_size = args.bilstm_hidden_size
         self.bilstm_num_layers = args.bilstm_num_layers
 
@@ -53,7 +55,7 @@ class Pat(nn.Module):
         self.position_emb_size = args.position_emb_size
         # bert
         self.bert = args.bert
-        self.bert_hidden_size = args.bert_hidden_size
+        self.bert_hidden_size = args.bert_hidden_size  # 768
         #polyglot embeddings
         self.polyglot = args.polyglot
         self.polyglot_size = 64 # pretrained model has standard length 64 (no other variants)
@@ -134,19 +136,21 @@ class Pat(nn.Module):
                 pad_index=self.word_vocab.pad
             ).to(self.device)
 
-        self.char_embedding = CharEmbeddings(
-            char_vocab=self.char_vocab,
-            embedding_dim=self.char_emb_size,
-            hidden_size=self.char_emb_hidden_size
-        ).to(self.device)
+        if self.char_emb:
+            self.char_embedding = CharEmbeddings(
+                char_vocab=self.char_vocab,
+                embedding_dim=self.char_emb_size,
+                hidden_size=self.char_emb_hidden_size
+            ).to(self.device)
 
-        self.cnn_char_embedding = CNNCharEmbeddings(
-            char_vocab=self.char_vocab,
-            cnn_embeddings_size=self.cnn_embeddings_size,
-            cnn_ce_kernel_size=self.cnn_ce_kernel_size,
-            cnn_ce_out_channels=self.cnn_ce_out_channels,
-            which_cuda=args.which_cuda
-        ).to(self.device)
+        if self.cnn_ce:
+            self.cnn_char_embedding = CNNCharEmbeddings(
+                char_vocab=self.char_vocab,
+                cnn_embeddings_size=self.cnn_embeddings_size,
+                cnn_ce_kernel_size=self.cnn_ce_kernel_size,
+                cnn_ce_out_channels=self.cnn_ce_out_channels,
+                which_cuda=args.which_cuda
+            ).to(self.device)
 
         # if glove is defined
         if self.glove_emb:
@@ -162,6 +166,7 @@ class Pat(nn.Module):
             embedding_dim=self.tag_emb_size,
             padding_idx=self.tag_vocab.pad,
         )
+
         '''
         Removed biLSTM layer
         self.bilstm = nn.LSTM(
@@ -183,6 +188,7 @@ class Pat(nn.Module):
             out_features=self.mlp_output_size, 
         )
         '''
+
         self.hidden2_to_pos = nn.Linear(
             in_features=self.bilstm_input_size,
             out_features=len(self.pos_vocab),
@@ -490,10 +496,12 @@ class Pat(nn.Module):
             c = self.cnn_char_embedding(orig_w)
             x = torch.cat([x, c], 2)
 
+        '''
         if self.polyglot:
             polyglot_features_list = self.get_polyglot_embeddings(orig_w)
             polyglot_features_tensor = from_tensor_list_to_one_tensor(polyglot_features_list, self.polyglot_size).to(self.device)
             x = torch.cat([x, polyglot_features_tensor], 2)
+        '''
 
         # (batch_size, seq_len, embedding_dim) -> (batch_size, seq_len, n_lstm_units)
         x = torch.nn.utils.rnn.pack_padded_sequence(x, x_lengths, batch_first=True)
@@ -502,10 +510,10 @@ class Pat(nn.Module):
         # (batch_size, seq_len, n_lstm_units) -> (batch_size * seq_len, n_lstm_units)
         x = x.contiguous()
         x = x.view(-1, x.shape[2])
-        # x = self.bilstm_to_hidden1(x) # removed hidden layer biLSTM
+        # x = self.bilstm_to_hidden1(x)  # removed hidden layer biLSTM
         x = F.relu(x)
         x = self.dropout(x)
-        # x = self.hidden1_to_hidden2(x) # removed hidden layer biLSTM
+        # x = self.hidden1_to_hidden2(x)  # removed hidden layer biLSTM
         x = F.relu(x)
 
         y1 = self.hidden2_to_pos(x)
