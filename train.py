@@ -155,14 +155,24 @@ else:
     #dev = [s[1:] for s in dev]
     #dev = [s for s in dev if len(s) > 0]
 
+
+def check_req_grad(m):
+    for name, param in m.named_parameters():
+        print(str(name) + " " + str(param.requires_grad))
+
+
 # if bert is used, generate bert_features
 if args.bert and args.bert_load_features != True:
     print('\nloading BERT...')
     # 168 here because it's the longest sentence in our training dataset
     # FIXME: add max_seq_length as parameter
     bert = Bert(args.bert_layers, args.bert_max_seq_length, args.bert_batch_size, args.bert_multilingual_cased, args.which_cuda)
-    print("Bert model: ", bert.model)
-    print("Bert tokenizer: ", bert.tokenizer)
+    print("BERT model:")
+    print(bert.model)
+    print("Bert tokenizer:")
+    print(bert.tokenizer)
+    # check req_grad
+    check_req_grad(bert.model)
     # set bert hidden size
     args.bert_hidden_size = bert.model.config.hidden_size
 
@@ -211,6 +221,8 @@ model_module = importlib.import_module(model_type)
 pat = model_module.Pat(args, word_vocab, tag_vocab, pos_vocab, deprel, char_vocab).to(device)
 print("Model:")
 print(pat)
+print("="*50)
+check_req_grad(pat)
 pat.mode = 'training'
 
 
