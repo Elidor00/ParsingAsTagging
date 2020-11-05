@@ -64,10 +64,18 @@ class Bert(object):
         sentences = [[e.form for e in sentence] for sentence in conll_dataset]
         # data loading
         features = []
-        for sentence in sentences:
+        for (ex_index, sentence) in enumerate(sentences):
             bert_tokens, map_to_original_tokens = self.convert_to_bert_tokenization(sentence)
             feature = self.from_bert_tokens_to_features(bert_tokens, map_to_original_tokens)
             features.append(feature)
+            # just print some example
+            if ex_index < 3:
+                print("*** Example ***")
+                print("sentence: ", sentence)
+                print("input_ids: ", feature.input_ids)
+                print("input_mask: ", feature.input_mask)
+                print("segment_ids: ", feature.tokens)
+                print("map_orig_token: ", feature.map_to_original_tokens)
         
         all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
         # mask with 0's for placeholders
@@ -89,9 +97,9 @@ class Bert(object):
             input_mask = input_mask.to(self.device)
             ### RUN MODEL ###
             # run model to get all 12 layers of bert
-            count += 1
             if count % 200 == 0:
                 print(count, " / ", len(sentences))
+            count += 1
             all_encoder_layers, _ = self.model(input_ids, token_type_ids=None, attention_mask=input_mask)
             # uncomment the follow line using UmBERTo from transformers
             averaged_output = all_encoder_layers
@@ -137,10 +145,12 @@ class Bert(object):
         # the `bert_tokens` index.
         orig_to_tok_map = []
 
-        bert_tokens.append("[CLS]")
+        # UmBERTo use <s> instead [CLS]
+        bert_tokens.append("<s>")
         for orig_token in orig_tokens:
           orig_to_tok_map.append(len(bert_tokens))
           bert_tokens.extend(self.tokenizer.tokenize(orig_token))
+        # now orig_to_tok_map can be used to project labels to the tokenized representation.
 
         # truncate
         # account for [SEP] with "- 1"
@@ -148,7 +158,8 @@ class Bert(object):
             bert_tokens = bert_tokens[0:(self.max_seq_length - 1)]    
 
         # Add [SEP] after truncate
-        bert_tokens.append("[SEP]")
+        # UmBERTo use </s> instead [SEP]
+        bert_tokens.append("</s>")
 
         return bert_tokens, orig_to_tok_map
 
