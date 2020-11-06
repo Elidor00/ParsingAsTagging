@@ -1,5 +1,8 @@
 import pickle
 import re
+from collections import defaultdict
+
+import networkx as nx
 from torch import nn
 from torch.nn import functional as F
 
@@ -8,19 +11,18 @@ from char_embeddings import CharEmbeddings, CNNCharEmbeddings
 from embeddings import *
 from positional_embeddings import PositionalEmbeddings
 from utils import first
-import networkx as nx
-from collections import defaultdict
 
 '''
-In this model I only removed the biLSTM and not even the hidden layers connected to it
+In this model I only removed the biLSTM and not even the hidden layers (MLP) connected to it
 '''
+
 
 class Pat(nn.Module):
 
     def __init__(self, args, word_vocab, tag_vocab, pos_vocab, deprel_vocab, char_vocab):
         super().__init__()
 
-        self.i=0
+        self.i = 0
         self.args = args
         self.word_vocab = word_vocab
         self.tag_vocab = tag_vocab
@@ -45,8 +47,8 @@ class Pat(nn.Module):
         self.char_emb_hidden_size = args.char_emb_hidden_size
         self.char_emb_size = args.char_emb_size
         # elmo
-        #self.elmo_opts = args.elmo_opts
-        #self.elmo_weights = args.elmo_weights
+        # self.elmo_opts = args.elmo_opts
+        # self.elmo_weights = args.elmo_weights
         # position embeddings
         self.position_emb_max_pos = args.position_emb_max_pos
         self.position_emb = args.position_emb
@@ -54,10 +56,10 @@ class Pat(nn.Module):
         # bert
         self.bert = args.bert
         self.bert_hidden_size = args.bert_hidden_size
-        #polyglot embeddings
+        # polyglot embeddings
         self.polyglot = args.polyglot
-        self.polyglot_size = 64 # pretrained model has standard length 64 (no other variants)
-        #cnn char encoding
+        self.polyglot_size = 64  # pretrained model has standard length 64 (no other variants)
+        # cnn char encoding
         self.cnn_ce = args.cnn_ce
         self.cnn_embeddings_size = args.cnn_embeddings_size
         self.cnn_ce_kernel_size = args.cnn_ce_kernel_size
@@ -66,7 +68,7 @@ class Pat(nn.Module):
         # Use head for predicting label
         self.use_head = args.use_head
 
-        #dropout
+        # dropout
         self.dropout = nn.Dropout(p=args.dropout)
         self.bilstm_dropout = args.bilstm_dropout
 
@@ -78,7 +80,6 @@ class Pat(nn.Module):
 
         self.loss_weight_factor = args.loss_weight_factor
 
-
         if self.polyglot:
             # Load embeddings
             words, embeddings = pickle.load(open(self.polyglot, 'rb'), encoding='latin1')
@@ -86,14 +87,13 @@ class Pat(nn.Module):
             # build a dictionary for fast access
             self.polyglot_dictionary = {}
             for i, w in enumerate(words):
-                self.polyglot_dictionary[w]=embeddings[i]
+                self.polyglot_dictionary[w] = embeddings[i]
 
             # Digits are replaced with # in this embedding
             self.polyglot_digit_transformer = re.compile('[0-9]', re.UNICODE)
 
             # Increase input size accordingly
             self.bilstm_input_size += self.polyglot_size
-
 
         if self.bert:
             self.bilstm_input_size = self.bilstm_input_size + self.bert_hidden_size
@@ -104,13 +104,13 @@ class Pat(nn.Module):
         # sum output of char embedding to bilstm
         # it is *2 bec a bilstm is used
         if self.char_emb:
-            self.bilstm_input_size = self.bilstm_input_size + self.char_emb_hidden_size*2
+            self.bilstm_input_size = self.bilstm_input_size + self.char_emb_hidden_size * 2
 
         if self.cnn_ce:
             self.bilstm_input_size += self.cnn_ce_out_channels
 
         # if elmo files are set
-        #if self.elmo_opts:
+        # if self.elmo_opts:
         #    print('using elmo')
         #    self.elmo = Elmo(
         #        self.elmo_opts,
@@ -134,19 +134,21 @@ class Pat(nn.Module):
                 pad_index=self.word_vocab.pad
             ).to(self.device)
 
-        self.char_embedding = CharEmbeddings(
-            char_vocab=self.char_vocab,
-            embedding_dim=self.char_emb_size,
-            hidden_size=self.char_emb_hidden_size
-        ).to(self.device)
+        if self.char_emb:
+            self.char_embedding = CharEmbeddings(
+                char_vocab=self.char_vocab,
+                embedding_dim=self.char_emb_size,
+                hidden_size=self.char_emb_hidden_size
+            ).to(self.device)
 
-        self.cnn_char_embedding = CNNCharEmbeddings(
-            char_vocab=self.char_vocab,
-            cnn_embeddings_size=self.cnn_embeddings_size,
-            cnn_ce_kernel_size=self.cnn_ce_kernel_size,
-            cnn_ce_out_channels=self.cnn_ce_out_channels,
-            which_cuda=args.which_cuda
-        ).to(self.device)
+        if self.cnn_ce:
+            self.cnn_char_embedding = CNNCharEmbeddings(
+                char_vocab=self.char_vocab,
+                cnn_embeddings_size=self.cnn_embeddings_size,
+                cnn_ce_kernel_size=self.cnn_ce_kernel_size,
+                cnn_ce_out_channels=self.cnn_ce_out_channels,
+                which_cuda=args.which_cuda
+            ).to(self.device)
 
         # if glove is defined
         if self.glove_emb:
@@ -172,6 +174,7 @@ class Pat(nn.Module):
             dropout=self.bilstm_dropout
         )
         '''
+
         self.bilstm_to_hidden1 = nn.Linear(
             in_features=self.bilstm_input_size,
             out_features=self.mlp_hidden_size,
@@ -188,12 +191,13 @@ class Pat(nn.Module):
         )
 
         self.hidden2_to_dep = nn.Linear(
-            in_features=self.mlp_output_size * 2 if self.use_head else self.mlp_output_size, # Depending on whether the head is used or not
+            in_features=self.mlp_output_size * 2 if self.use_head else self.mlp_output_size,
+            # Depending on whether the head is used or not
             out_features=len(self.deprel_vocab),
         )
 
         # init embeding weights only if glove is not defined
-        if self.glove_emb == None:
+        if self.glove_emb is None:
             nn.init.xavier_normal_(self.word_embedding.weight)
         nn.init.xavier_normal_(self.tag_embedding.weight)
         nn.init.xavier_normal_(self.bilstm_to_hidden1.weight)
@@ -257,16 +261,16 @@ class Pat(nn.Module):
         loss1 = F.cross_entropy(y_pred1, y1, ignore_index=self.pos_vocab.pad)
         loss2 = F.cross_entropy(y_pred2, y2, ignore_index=self.deprel_vocab.pad)
 
-        return loss1+self.loss_weight_factor*loss2
+        return loss1 + self.loss_weight_factor * loss2
 
     # graph -> graph with no cycles
     # head_values -> a topk result applied on a 1d tensor. pair of original values and indices (therefore it is sorted in descendent order)
     # Returns the index of first value from head_values which when added to graph doesn't add a cycle, entry_id and pos_value
     def first_not_cycle(self, graph, head_values, entry_id, sentence_length):
-        debug=[]
+        debug = []
         _, indices = head_values
         for value in indices:
-            word=self.pos_vocab[int(value)]
+            word = self.pos_vocab[int(value)]
             if word != '<pad>':
                 copy_graph = graph.copy()
                 pos_value = 0 if word == '<unk>' else int(word)
@@ -274,8 +278,8 @@ class Pat(nn.Module):
                     copy_graph.add_edge(entry_id + pos_value if pos_value != 0 else 0, entry_id)
                     if len(list(nx.simple_cycles(copy_graph))) == 0:
                         return entry_id + pos_value if pos_value != 0 else 0, entry_id, pos_value
-                debug.append(f"Tried to add  {entry_id + pos_value}, but it adds a cycle or is outside {entry_id + pos_value}")
-
+                debug.append(
+                    f"Tried to add  {entry_id + pos_value}, but it adds a cycle or is outside {entry_id + pos_value}")
 
         # Not possible to add an edge without creating a cycle. This should not be possible
         print(graph.edges())
@@ -283,8 +287,9 @@ class Pat(nn.Module):
         print(head_values)
         print(entry_id)
         print(debug)
-        raise ValueError("Not possible to add an edge without creating a cycle. This should not be possible, because E=V+1 (for this particular problem) and there are V^2 possible edges to add")
-
+        raise ValueError(
+            "Not possible to add an edge without creating a cycle. This should not be possible, because E=V+1 (for this particular problem) and there are V^2 possible edges to add"
+        )
 
     # Receives a matrix which is similar to an adjacency matrix, but the weights represent the probability.
     # Take the one that is most likely to be the root first
@@ -300,9 +305,9 @@ class Pat(nn.Module):
             if entry.id != 0:
                 for k, probability in enumerate(y[j]):
                     word = self.pos_vocab[k]
-                    if word != '<pad>': # Skip pad
+                    if word != '<pad>':  # Skip pad
                         pos = int(word) if word != '<unk>' else 0
-                        if 0 <= entry.id + pos < sentence_length: # make sure is between limits
+                        if 0 <= entry.id + pos < sentence_length:  # make sure is between limits
                             G.add_edge(entry.id + pos if pos != 0 else 0, entry.id, weight=probability)
 
         edmond = nx.algorithms.tree.branchings.Edmonds(G)
@@ -389,7 +394,8 @@ class Pat(nn.Module):
                         # Indices from biggest to smallest (total = k) from y1[i][j] (current entry)
                         y1_topk = y1[i][j].topk(max)[1]
                         # Take first index (descending order) that is not '<pad>' and inside sentence
-                        index = first(y1_topk, lambda ind: self.pos_vocab[int(ind)] != '<pad>' and (0 <= (entry.id + get_pos(ind)) < sentence_length))
+                        index = first(y1_topk, lambda ind: self.pos_vocab[int(ind)] != '<pad>'
+                                                           and (0 <= (entry.id + get_pos(ind)) < sentence_length))
 
                         pos = get_pos(index)
                         entry.head = entry.id + pos if pos != 0 else 0
@@ -407,11 +413,10 @@ class Pat(nn.Module):
                 for sentence in sentences:
                     G = nx.DiGraph()
                     for entry in sentence:
-                        if entry.id != 0: # Might be that root.head is equal to root.id (fake root, with id=0)
+                        if entry.id != 0:  # Might be that root.head is equal to root.id (fake root, with id=0)
                             G.add_edge(entry.head, entry.id)
                     if len(list(nx.simple_cycles(G))) > 0:
                         self.nr_of_cycles += 1
-
 
     def prepare(self, sentences, vocab):
         x = [torch.tensor([vocab[w] for w in sentence]).to(self.device) for sentence in sentences]
@@ -419,7 +424,7 @@ class Pat(nn.Module):
         padded_x = torch.nn.utils.rnn.pad_sequence(x, batch_first=True)
         return padded_x, x_lengths
 
-    #def get_elmo_embeddings(self, orig_w):
+    # def get_elmo_embeddings(self, orig_w):
     #    # elmo uses non-normalized words
     #    #w = [[e.form for e in sentence] for sentence in sentences]
     #    # elmo from batch/sentence to batch/character_ids
@@ -445,7 +450,6 @@ class Pat(nn.Module):
         else:
             return self.polyglot_dictionary[word]
 
-
     def get_polyglot_embeddings(self, orig_w):
         return [[torch.tensor(self.get_polyglot_embedding(word)) for word in sentence] for sentence in orig_w]
 
@@ -463,7 +467,8 @@ class Pat(nn.Module):
             # get bert features from model
             bert_features_list = [[e.bert for e in sentence] for sentence in sentences]
             # convert list to one tensor
-            bert_features_tensor = from_tensor_list_to_one_tensor(bert_features_list, self.bert_hidden_size).to(self.device)
+            bert_features_tensor = from_tensor_list_to_one_tensor(bert_features_list, self.bert_hidden_size)\
+                .to(self.device)
             # concat the tensor with the the rest of the word embeddings
             we = torch.cat((bert_features_tensor, we), 2)
 
@@ -477,7 +482,7 @@ class Pat(nn.Module):
         # concat tags embeddings and word embeddings
         x = torch.cat((we, t), 2)
 
-        #if self.elmo_opts:
+        # if self.elmo_opts:
         #    elmo_embeds = self.get_elmo_embeddings(orig_w)
         #    x = torch.cat([x, elmo_embeds], 2)
 
@@ -491,7 +496,8 @@ class Pat(nn.Module):
 
         if self.polyglot:
             polyglot_features_list = self.get_polyglot_embeddings(orig_w)
-            polyglot_features_tensor = from_tensor_list_to_one_tensor(polyglot_features_list, self.polyglot_size).to(self.device)
+            polyglot_features_tensor = from_tensor_list_to_one_tensor(polyglot_features_list, self.polyglot_size)\
+                .to(self.device)
             x = torch.cat([x, polyglot_features_tensor], 2)
 
         # (batch_size, seq_len, embedding_dim) -> (batch_size, seq_len, n_lstm_units)
@@ -520,11 +526,11 @@ class Pat(nn.Module):
 
                 # each offset is of length (seq_len) in the end
                 # Creates offsets: [0,0,0..,0], [seq_length, seq_length, .., seq_length], [2*seq_length, 2*seq_length, .., 2*seq_length] etc that are used for fast access in a tensor of shape (batch_size * seq_length, pos_hidden_size)
-                offsets = (torch.arange(batch_size).repeat(seq_len).view(seq_len, batch_size).transpose(0,1) * seq_len).contiguous().view(1,-1)[0].to(self.device)
+                offsets = (torch.arange(batch_size).repeat(seq_len).view(seq_len, batch_size).transpose(0, 1) * seq_len).contiguous().view(1, -1)[0]\
+                    .to(self.device)
                 indices = heads + offsets
 
                 heads = x[indices]
-
 
         elif self.mode == 'evaluation':
             if self.use_head:
@@ -539,12 +545,14 @@ class Pat(nn.Module):
 
                 maxes = torch.argmax(y1, dim=1)
 
-                offsets = (torch.arange(batch_size).repeat(seq_len).view(seq_len, batch_size).transpose(0,1) * seq_len).contiguous().view(1,-1)[0].to(self.device)
+                offsets = (torch.arange(batch_size).repeat(seq_len).view(seq_len, batch_size).transpose(0, 1) * seq_len).contiguous().view(1, -1)[0]\
+                    .to(self.device)
                 for i in range(heads.shape[0]):
                     if ids[i] != 0:
                         word = self.pos_vocab[int(maxes[i])]
                         pos = 0 if word == '<unk>' else int(word)
-                        heads[i] = (0 if pos+ids[i] > maximum else torch.clamp(pos + ids[i], min=0)) if pos != 0 else 0
+                        heads[i] = (
+                            0 if pos + ids[i] > maximum else torch.clamp(pos + ids[i], min=0)) if pos != 0 else 0
                     else:
                         heads[i] = 0
                 indices = heads + offsets
@@ -553,15 +561,13 @@ class Pat(nn.Module):
             exit("Unknown mode")
 
         if self.use_head:
-            x = torch.cat([x,heads], 1)
+            x = torch.cat([x, heads], 1)
 
         y2 = self.hidden2_to_dep(x)
-
 
         if self.mode == 'evaluation':
             y1 = F.softmax(y1, dim=1)
             y2 = F.softmax(y2, dim=1)
-
 
         # (batch_size * seq_len, n_lstm_units) -> (batch_size, seq_len, n_tags)
         y1 = y1.view(batch_size, seq_len, len(self.pos_vocab))
