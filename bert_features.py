@@ -70,7 +70,7 @@ class Bert(object):
             features.append(feature)
             # just print some example
             if ex_index < 3:
-                print("*** Example ***")
+                print(f"*** Example {ex_index} ***")
                 print("sentence: ", sentence)
                 print("input_ids: ", feature.input_ids)
                 print("input_mask: ", feature.input_mask)

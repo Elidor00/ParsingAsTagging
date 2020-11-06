@@ -201,7 +201,7 @@ class Pat(nn.Module):
         )
 
         # init embeding weights only if glove is not defined
-        if self.glove_emb == None:
+        if self.glove_emb is None:
             nn.init.xavier_normal_(self.word_embedding.weight)
         nn.init.xavier_normal_(self.tag_embedding.weight)
         # nn.init.xavier_normal_(self.bilstm_to_hidden1.weight)
