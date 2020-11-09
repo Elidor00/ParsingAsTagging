@@ -33,7 +33,7 @@ def eval_conll(sentences, gold_filename, metadata, verbose=True):
         if metadata:
             subprocess.run(["./parse.sh", gold_filename])
         # -p : punctuation: also score on punctuation (default is not to score on it)
-        p = subprocess.run(['./eval.pl', '-p', '-g', gold_filename, '-s', f.name], stdout=subprocess.PIPE)
+        p = subprocess.run(['./eval.pl', '-g', gold_filename, '-s', f.name], stdout=subprocess.PIPE)
         o = p.stdout.decode('utf-8')
         if verbose: print(o)
         m1 = re.search(r'Unlabeled attachment score: (.+)', o)
