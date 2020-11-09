@@ -279,7 +279,8 @@ class Pat(nn.Module):
                     if len(list(nx.simple_cycles(copy_graph))) == 0:
                         return entry_id + pos_value if pos_value != 0 else 0, entry_id, pos_value
                 debug.append(
-                    f"Tried to add  {entry_id + pos_value}, but it adds a cycle or is outside {entry_id + pos_value}")
+                    f"Tried to add  {entry_id + pos_value}, but it adds a cycle or is outside {entry_id + pos_value}"
+                )
 
         # Not possible to add an edge without creating a cycle. This should not be possible
         print(graph.edges())
