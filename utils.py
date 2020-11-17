@@ -53,3 +53,7 @@ def get_slanted_triangular_lr(t, T, cut_frac=0.1, ratio=32, lr_max=0.01):
     p = t/cut if t < cut else 1 - (t-cut)/(cut*((1/cut_frac) - 1))
     lr = lr_max * (1+p*(ratio-1))/ratio
     return lr
+
+
+def batch_to_ids(orig_w):
+    pass
