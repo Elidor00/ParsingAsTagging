@@ -21,7 +21,7 @@ parser.add_argument('--no-cycles-strategy', default="optimal", help='what strate
 parser.add_argument('--print-nr-of-cycles', action='store_true', help='print percentage of cycles in the output')
 parser.add_argument('--which-cuda', type=int, default=0, help='which cuda to use')
 
-#Choose model
+# Choose model
 parser.add_argument('--choose-model', type=int, default=0, help='0 original model, 1 model without biLSTM and hidden layer, 2 model without only biLSTM')
 
 args = parser.parse_args()
@@ -55,7 +55,7 @@ print('parsing test dataset')
 
 model_type = model[args.choose_model]
 model_module = importlib.import_module(model_type)
-pat = model_module.Pat.load(args.model, device).to(device)
+pat = model_module.Pat.load(model_module, args.model, device).to(device)
 print("Model:")
 print(pat)
 pat.mode = 'evaluation'

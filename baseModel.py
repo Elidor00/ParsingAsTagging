@@ -20,13 +20,13 @@ class BaseModel(nn.Module):
 
         self.i = 0
 
-    @staticmethod
-    def load(name, device):
+    def load(self, name, device):
         with open(f'{name}.pickle', 'rb') as f:
             params = pickle.load(f)
             print(params)
             params[0].which_cuda = device.index
-            pat = Pat(*params)
+            print("name: ", name)
+            pat = self.Pat(*params)
             pat.load_state_dict(torch.load(f'{name}.model', map_location=device), strict=True)
         return pat
 
