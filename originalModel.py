@@ -211,7 +211,7 @@ class Pat(BaseModel):
             out_features=len(self.deprel_vocab),
         )
 
-        # init embeding weights only if glove is not defined
+        # init embedding weights only if glove is not defined
         if self.glove_emb is None:
             nn.init.xavier_normal_(self.word_embedding.weight)
         nn.init.xavier_normal_(self.tag_embedding.weight)

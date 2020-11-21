@@ -1,8 +1,6 @@
 import pickle
 import re
-from collections import defaultdict
 
-import networkx as nx
 from torch import nn
 from torch.nn import functional as F
 
@@ -11,7 +9,6 @@ from bert_features import from_tensor_list_to_one_tensor
 from char_embeddings import CharEmbeddings, CNNCharEmbeddings
 from embeddings import *
 from positional_embeddings import PositionalEmbeddings
-from utils import first
 
 '''
 In this model I removed the biLSTM and the hidden layers connected to it.
@@ -200,7 +197,7 @@ class Pat(BaseModel):
             out_features=len(self.deprel_vocab),
         )
 
-        # init embeding weights only if glove is not defined
+        # init embedding weights only if glove is not defined
         if self.glove_emb is None:
             nn.init.xavier_normal_(self.word_embedding.weight)
         nn.init.xavier_normal_(self.tag_embedding.weight)
