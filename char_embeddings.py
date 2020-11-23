@@ -2,6 +2,7 @@ import torch
 from torch.nn import functional as F
 from torch import nn
 
+
 class CharEmbeddings(nn.Module):  # CharacterModel in char_model.py
     def __init__(self, char_vocab, embedding_dim, hidden_size, which_cuda=0):
         super().__init__()
@@ -14,13 +15,13 @@ class CharEmbeddings(nn.Module):  # CharacterModel in char_model.py
         self.hidden_size = hidden_size  # 25
 
         self.embeddings = nn.Embedding(
-            num_embeddings = len(self.vocab),  # uguale
-            embedding_dim = embedding_dim,  # 100 (ner tagger), 400 (Pos tagger), 400 (depparse)
-            padding_idx = self.vocab.pad
+            num_embeddings=len(self.vocab),
+            embedding_dim=embedding_dim,  # 100 (ner tagger), 400 (Pos tagger), 400 (depparse)
+            padding_idx=self.vocab.pad
         )
 
         """
-        in ner Bidirectional True and Attention False (non lo uso)
+        in ner Bidirectional True and Attention False
         self.num_dir = 2 if bidirectional else 1
         
             if self.attention: 
@@ -29,14 +30,13 @@ class CharEmbeddings(nn.Module):  # CharacterModel in char_model.py
         """
 
         self.bilstm = nn.LSTM(
-            input_size = embedding_dim,  # 100 (ner tagger), 400 (Pos tagger), 400 (depparse)
-            hidden_size = self.hidden_size,  # 100 (ner), 400 (Pos tagger)
-            num_layers = 1,  # uguale (ner tagger)
-            bidirectional = True
+            input_size=embedding_dim,  # 100 (ner tagger), 400 (Pos tagger), 400 (depparse)
+            hidden_size=self.hidden_size,  # 100 (ner), 400 (Pos tagger)
+            num_layers=1,  # uguale (ner tagger)
+            bidirectional=True
             # dropout = 0 if num_layers == 1 else 0.5
         )
 
-    
     def forward(self, sentence_batch):
         # char2index + padding
         words, lengths, unsort_idx = self.prepare(sentence_batch)
@@ -67,7 +67,7 @@ class CharEmbeddings(nn.Module):  # CharacterModel in char_model.py
         # filter_idx -> (n_nonpad_words, hidden_size)
 
         # get the output of the first character
-        backward_out = x[:,0,self.hidden_size:]
+        backward_out = x[:, 0, self.hidden_size:]
         # concat first char's output last hidden state part with the last char's output first hidden state part
         x = torch.cat([forward_out, backward_out], 1)
         # x -> (n_nonpad_words, hidden_size*2)
@@ -77,7 +77,7 @@ class CharEmbeddings(nn.Module):  # CharacterModel in char_model.py
         # unsort
         x = x[unsort_idx]
         # reshape to sentence size
-        x = x.view(len(sentence_batch), -1 , self.hidden_size*2)
+        x = x.view(len(sentence_batch), -1, self.hidden_size*2)
         # x -> (batch_size, max_sentence_size, hidden_size*2)
         return x
     
@@ -99,7 +99,7 @@ class CharEmbeddings(nn.Module):  # CharacterModel in char_model.py
         word_lengths = [len(w) for w in flatten_padded_sentences]
         # sort
         sort_word_len, sort_idx = torch.LongTensor(word_lengths).to(self.device).sort(0, descending=True)
-        #print(flatten_padded_sentences)
+        # print(flatten_padded_sentences)
         flatten_padded_sentences = [flatten_padded_sentences[i] for i in sort_idx]
         # get unsort_index
         _, unsort_idx = sort_idx.sort(0)
@@ -121,7 +121,8 @@ class CharEmbeddings(nn.Module):  # CharacterModel in char_model.py
         
         return padded_words, sort_word_len
     
-#model = CharEmbeddings(char_vocab, 5, 5)
+# model = CharEmbeddings(char_vocab, 5, 5)
+
 
 class CNNCharEmbeddings(CharEmbeddings):
     def __init__(self, char_vocab, cnn_embeddings_size, cnn_ce_kernel_size, cnn_ce_out_channels, which_cuda=0):
