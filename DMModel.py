@@ -8,7 +8,7 @@ from baseModel import BaseModel
 from bert_features import from_tensor_list_to_one_tensor
 from char_embeddings import CharEmbeddings, CNNCharEmbeddings
 from embeddings import *
-from module import MLP
+from module import MLP, MyLSTM
 from positional_embeddings import PositionalEmbeddings
 from positional_encoding import PositionalEncoding
 
@@ -17,7 +17,7 @@ Model with some improvement by Dozat and Manning Parser
 Some modification:
 - char emb with LSTM
 - MLP module similar to those present in DM
-TODO: - attention or bilstm attention
+- self dot attention bilstm
 '''
 
 
@@ -179,7 +179,7 @@ class Pat(BaseModel):
             padding_idx=self.tag_vocab.pad,
         )
 
-        self.bilstm = nn.LSTM(
+        self.bilstm = MyLSTM(
             input_size=self.bilstm_input_size,
             hidden_size=self.bilstm_hidden_size,
             num_layers=self.bilstm_num_layers,
@@ -188,8 +188,13 @@ class Pat(BaseModel):
             dropout=self.bilstm_dropout
         )
 
+        if "nn.modules.rnn" in str((type(self.bilstm))):
+            in_features = self.bilstm_hidden_size * 2
+        else:
+            in_features = self.bilstm_hidden_size * 4
+
         self.bilstm_to_hidden1 = MLP(
-            in_features=self.bilstm_hidden_size * 2,
+            in_features=in_features,
             out_features=self.mlp_hidden_size,
             depth=2
         )
@@ -222,6 +227,9 @@ class Pat(BaseModel):
         nn.init.xavier_normal_(self.hidden2_to_pos.weight)
         nn.init.xavier_normal_(self.hidden2_to_dep.weight)
         for name, param in self.bilstm.named_parameters():
+            # if 'fc2' in name or 'fc1' in name:
+            #     pass
+            # else:
             if 'bias' in name:
                 nn.init.constant_(param, 0)
             elif 'weight' in name:
@@ -282,15 +290,14 @@ class Pat(BaseModel):
             x = torch.cat([x, polyglot_features_tensor], 2)
 
         # (batch_size, seq_len, embedding_dim) -> (batch_size, seq_len, n_lstm_units)
-        x = torch.nn.utils.rnn.pack_padded_sequence(x, x_lengths, batch_first=True)
-        x, _ = self.bilstm(x)
-        x, _ = torch.nn.utils.rnn.pad_packed_sequence(x, batch_first=True)
+        # x = torch.nn.utils.rnn.pack_padded_sequence(x, x_lengths, batch_first=True)
+        x = self.bilstm(x, x_lengths)
+        # x, _ = torch.nn.utils.rnn.pad_packed_sequence(x, batch_first=True)
         # (batch_size, seq_len, n_lstm_units) -> (batch_size * seq_len, n_lstm_units)
         x = x.contiguous()
         x = x.view(-1, x.shape[2])
-
-        x = self.bilstm_to_hidden1(x)  # MLP depth = 2
-        x = self.hidden1_to_hidden2(x)  # MLP depth = 2
+        x = self.bilstm_to_hidden1(x)
+        x = self.hidden1_to_hidden2(x)
 
         # MLP
         # x = self.bilstm_to_hidden1(x)
