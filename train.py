@@ -161,6 +161,10 @@ def check_req_grad(m):
         print(str(name) + " " + str(param.requires_grad))
 
 
+def count_parameters(m):
+    params = sum(p.numel() for p in m.parameters() if p.requires_grad)
+    print("Number of total trainable parameters: ", params)
+
 # if bert is used, generate bert_features
 if args.bert and args.bert_load_features != True:
     print('\nloading BERT...')
@@ -223,8 +227,11 @@ print("Model:")
 print(pat)
 print("="*50)
 check_req_grad(pat)
+count_parameters(pat)
 pat.mode = 'training'
 
+# print("-"*100)
+# print(filter(lambda p: p.requires_grad, pat.parameters()))
 
 optimizer = torch.optim.Adam(
     params=filter(lambda p: p.requires_grad, pat.parameters()),
