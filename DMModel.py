@@ -17,7 +17,7 @@ Model with some improvement by Dozat and Manning Parser
 Some modification:
 - char emb with LSTM
 - MLP module similar to those present in DM
-- self dot attention bilstm
+- self-attention bilstm
 '''
 
 
@@ -188,21 +188,18 @@ class Pat(BaseModel):
             dropout=self.bilstm_dropout
         )
 
-        if "nn.modules.rnn" in str((type(self.bilstm))):
-            in_features = self.bilstm_hidden_size * 2
-        else:
-            in_features = self.bilstm_hidden_size * 4
-
         self.bilstm_to_hidden1 = MLP(
-            in_features=in_features,
+            in_features=self.bilstm_hidden_size * 2,
             out_features=self.mlp_hidden_size,
-            depth=2
+            depth=1,
+            flag=True
         )
 
         self.hidden1_to_hidden2 = MLP(
             in_features=self.mlp_hidden_size,
             out_features=self.mlp_output_size,
-            depth=2
+            depth=1,
+            flag=False
         )
 
         self.hidden2_to_pos = nn.Linear(
@@ -227,9 +224,6 @@ class Pat(BaseModel):
         nn.init.xavier_normal_(self.hidden2_to_pos.weight)
         nn.init.xavier_normal_(self.hidden2_to_dep.weight)
         for name, param in self.bilstm.named_parameters():
-            # if 'fc2' in name or 'fc1' in name:
-            #     pass
-            # else:
             if 'bias' in name:
                 nn.init.constant_(param, 0)
             elif 'weight' in name:
@@ -299,17 +293,7 @@ class Pat(BaseModel):
         x = self.bilstm_to_hidden1(x)
         x = self.hidden1_to_hidden2(x)
 
-        # MLP
-        # x = self.bilstm_to_hidden1(x)
-        # x = F.relu(x)
-        # x = self.dropout(x)
-
-        # MLP
-        # x = self.hidden1_to_hidden2(x)
-        # x = F.relu(x)
-
         y1 = self.hidden2_to_pos(x)
-        # print(x.shape)
         if self.mode == 'training':
             if self.use_head:
                 heads = [[e.head for e in sentence] for sentence in sentences]
