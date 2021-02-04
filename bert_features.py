@@ -9,6 +9,8 @@ from transformers import AutoTokenizer, AutoModel
 
 from torch.utils.data import DataLoader, TensorDataset, SequentialSampler
 
+from tqdm import tqdm
+
 from torch.nn import functional as F
 
 class InputFeatures(object):
@@ -91,15 +93,15 @@ class Bert(object):
         eval_sampler = SequentialSampler(eval_data)
         eval_dataloader = DataLoader(eval_data, sampler=eval_sampler, batch_size=self.batch_size)
 
-        count = 0
-        for input_ids, input_mask, token_maps, example_indices in eval_dataloader:
+        # count = 0
+        for input_ids, input_mask, token_maps, example_indices in tqdm(eval_dataloader, desc="Extracting..."):
             input_ids = input_ids.to(self.device)
             input_mask = input_mask.to(self.device)
             ### RUN MODEL ###
             # run model to get all 12 layers of bert
-            if count % 200 == 0:
-                print(count, " / ", len(sentences))
-            count += 1
+            # if count % 200 == 0:
+            #     print(count, " / ", len(sentences))
+            # count += 1
             all_encoder_layers, _ = self.model(input_ids, token_type_ids=None, attention_mask=input_mask)
             # uncomment the follow line using UmBERTo from transformers
             averaged_output = all_encoder_layers
