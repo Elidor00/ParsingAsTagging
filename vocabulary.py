@@ -9,7 +9,6 @@ def make_word_vocabulary(sentences, prune=0, normalize=True):
     return vocab
 
 
-
 def make_tag_vocabulary(sentences, partofspeech_type, prune=0):
     """make part-of-speech vocabulary from a list of sentences"""
     vocab = Vocabulary()
@@ -19,7 +18,6 @@ def make_tag_vocabulary(sentences, partofspeech_type, prune=0):
     if prune > 0:
         vocab = vocab.prune(prune)
     return vocab
-
 
 
 def make_deprel_vocabulary(sentences, prune=0):
@@ -33,8 +31,7 @@ def make_deprel_vocabulary(sentences, prune=0):
     return vocab
 
 
-
-def make_pos_vocabulary(sentences, prune=0, left_threshold = -50, right_threshold = 50):
+def make_pos_vocabulary(sentences, prune=0, left_threshold=-50, right_threshold=50):
     """make position vocabulary from a list of sentences
     We empirically chose a range of (−50, 50), which
     accounts for 99.9% of the English dependencies in the Universal Dependencies training dataset.
@@ -50,7 +47,6 @@ def make_pos_vocabulary(sentences, prune=0, left_threshold = -50, right_threshol
     return vocab
 
 
-
 def make_char_vocabulary(sentences, prune=0, normalize=False):
     """make character vocabulary from a list of sentences"""
     vocab = Vocabulary()
@@ -63,7 +59,6 @@ def make_char_vocabulary(sentences, prune=0, normalize=False):
     return vocab
 
 
-
 class Vocabulary:
     """Keeps a mapping between words and ids. Also keeps word counts."""
 
@@ -71,7 +66,7 @@ class Vocabulary:
         self.pad = 0
         self.unk = 1
         self.i2w = ['<pad>', '<unk>']
-        self.w2i = {w:i for i,w in enumerate(self.i2w)}
+        self.w2i = {w: i for i, w in enumerate(self.i2w)}
         self.counts = [0] * len(self.i2w)
 
     def __len__(self):
@@ -142,4 +137,5 @@ class Vocabulary:
         return list(zip(self.i2w, self.counts))
 
     def __str__(self):
-        return str(self.pad) + "\t" + str(self.unk) + "\t" + str(self.i2w) + "\t" + str(self.w2i) + "\t" + str(self.counts) + "\n"
+        return str(self.pad) + "\t" + str(self.unk) + "\t" + str(self.i2w) + "\t" + str(self.w2i) + "\t" + \
+               str(self.counts) + "\n"

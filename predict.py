@@ -47,7 +47,8 @@ test = read_conll(args.test, args.test_metadata, lower_case=not params[0].bert_m
 
 # Add .bert attribute to ConnlEntry if -bert flag is set @see ConllEntry
 if params[0].bert:
-    bert = Bert(params[0].bert_layers, params[0].bert_max_seq_length, params[0].bert_batch_size, params[0].bert_multilingual_cased, args.which_cuda)
+    bert = Bert(params[0].bert_layers, params[0].bert_max_seq_length, params[0].bert_batch_size,
+                params[0].bert_multilingual_cased, args.which_cuda)
     bert.extract_bert_features(test)
 print(params[0])
 print(args)
@@ -69,4 +70,3 @@ with torch.no_grad():
 
 print('evaluating parsing results')
 eval_conll(test, args.test, args.test_metadata)
-

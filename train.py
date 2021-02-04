@@ -67,7 +67,7 @@ parser.add_argument('--bert', action='store_true', help='use bert features')
 parser.add_argument('--bert-batch-size', type=int, default=1, help='bert batch size')
 parser.add_argument('--bert-layers', type=str, default='-1,-2,-3,-4', help='layers extracted from bert')
 parser.add_argument('--bert-store-features', action='store_true', help='store bert features')
-parser.add_argument('--bert-load-features', action='store_true', help='load bert features from data.piclke file')
+parser.add_argument('--bert-load-features', action='store_true', help='load bert features from data.pickle file')
 parser.add_argument('--bert-hidden-size', type=int, default=768, help='used in order to tell Pat model the hidden size of bert')
 parser.add_argument('--bert-max-seq-length', type=int, default=512, help='set the max length for bert')
 parser.add_argument('--bert-multilingual-cased', action='store_true', help='use bert-base-multilingual-cased; the default is (en only) bert-base-uncased')
@@ -77,37 +77,37 @@ parser.add_argument('--polyglot', type=str, required=False, default=None, help="
 
 parser.add_argument('--loss-weight-factor', type=float, required=False, default=1.0, help="Weight factor to consider when adding the losses")
 
-#CNN Char Embeddings
+# CNN Char Embeddings
 parser.add_argument('--cnn-ce', action='store_true', help='use cnn char embeddings')
 parser.add_argument('--cnn-embeddings-size', type=int, default=50, help='size of embeddings used for each char')
 parser.add_argument('--cnn-ce-kernel-size', type=int, default=3, help='size of the filter to be used in (must be odd)')
 parser.add_argument('--cnn-ce-out-channels', type=int, default=50, help='output size')
 
-#Label classifier using head
+# Label classifier using head
 parser.add_argument('--use-head', action='store_true', help="use the gold head (train mode) and predicted head (evaluation mode) for predicting the label")
 
-#Adam Optimizer
+# Adam Optimizer
 parser.add_argument('--beta1', type=float, default=0.9, help="Beta1 in Adam")
 parser.add_argument('--beta2', type=float, default=0.999, help="Beta2 in Adam")
 parser.add_argument('--weight-decay', type=float, default=0.0, help="Weight decay")
 parser.add_argument('--slanted-triangle-lr', action='store_true', help="Use or not the slanted triangle learning rate technique")
 
-#Dropout
+# Dropout
 parser.add_argument('--dropout', type=float, default=0.2, help="Dropout value")
 
-#Part of speech tag
+# Part of speech tag
 parser.add_argument('--part-of-speech', type=str, default="upos", help='Which part of speech tag to use. One of {"upos", or ""xpos"')
 
 parser.add_argument('--which-cuda', type=int, default=0, help='which cuda to use')
 
-#Choose model
+# Choose model
 parser.add_argument('--choose-model', type=int, default=0, help='0 original model, 1 model without biLSTM and hidden layer, 2 model without only biLSTM')
 
 args = parser.parse_args()
 print(args)
 
 # ensure both elmo opts and weights were given or none of them
-if ((args.elmo_opts and args.elmo_weights) or (not args.elmo_opts and not args.elmo_weights)) == False:
+if not ((args.elmo_opts and args.elmo_weights) or (not args.elmo_opts and not args.elmo_weights)):
     print('error: both --elmo-weights and --elmo-opts must be set')
     exit()
 
@@ -142,9 +142,9 @@ else:
     print(f'\nloading training data from {args.train}')
     train = read_conll(args.train, args.train_metadata, lower_case=not args.bert_multilingual_cased)
     # remove <root> token
-    #train = [s[1:] for s in train]
+    # train = [s[1:] for s in train]
     # ignore sentences that had only <root>
-    #train = [s for s in train if len(s) > 0]
+    # train = [s for s in train if len(s) > 0]
 
     # train = train[:50]
     # keep a copy of the train dataset   that will be used for evaluation
@@ -152,8 +152,8 @@ else:
 
     print(f'\nloading development data from {args.dev}')
     dev = read_conll(args.dev, args.dev_metadata, lower_case=not args.bert_multilingual_cased)
-    #dev = [s[1:] for s in dev]
-    #dev = [s for s in dev if len(s) > 0]
+    # dev = [s[1:] for s in dev]
+    # dev = [s for s in dev if len(s) > 0]
 
 
 def check_req_grad(m):
@@ -165,12 +165,14 @@ def count_parameters(m):
     params = sum(p.numel() for p in m.parameters() if p.requires_grad)
     print("Number of total trainable parameters: ", params)
 
+
 # if bert is used, generate bert_features
-if args.bert and args.bert_load_features != True:
+if (args.bert and args.bert_load_features) is not True:
     print('\nloading BERT...')
     # 168 here because it's the longest sentence in our training dataset
     # FIXME: add max_seq_length as parameter
-    bert = Bert(args.bert_layers, args.bert_max_seq_length, args.bert_batch_size, args.bert_multilingual_cased, args.which_cuda)
+    bert = Bert(args.bert_layers, args.bert_max_seq_length, args.bert_batch_size, args.bert_multilingual_cased,
+                args.which_cuda)
     print("BERT model:")
     print(bert.model)
     print("Bert tokenizer:")
@@ -180,16 +182,16 @@ if args.bert and args.bert_load_features != True:
     # set bert hidden size
     args.bert_hidden_size = bert.model.config.hidden_size
 
-    print('extracting features for dev...')
+    print('Extracting features for dev...')
     bert.extract_bert_features(dev)
-    print('extracting features for training...')
+    print('Extracting features for training...')
     bert.extract_bert_features(train)
     if args.bert_store_features:
-        data = {'train':train, 'dev':dev}
-        print('saving bert features to disk')
+        data = {'train': train, 'dev': dev}
+        print('Saving bert features to disk')
         with open(os.path.join(args.output, 'bert_features.pickle'), 'wb') as f:
             pickle.dump(data, f)
-    print('done with BERT.')
+    print('DONE with BERT.')
 
 random.seed(args.random_seed)
 torch.manual_seed(args.random_seed)
@@ -265,7 +267,7 @@ for epoch in range(args.epochs):
     print('-' * 50)
     print('epoch', epoch)
 
-    print('  elapsed time:', int((time.time()-start)/60), 'minutes and', int((time.time()-start)%60), 'seconds')
+    print('  elapsed time:', int((time.time()-start)/60), 'minutes and', int((time.time()-start) % 60), 'seconds')
     # Evaluate
     pat = pat.eval()
     pat.mode = 'evaluation'
@@ -284,14 +286,13 @@ for epoch in range(args.epochs):
         if what == 'uas':
             if best_dev_uas < new_dev_uas:
                 best_dev_uas = new_dev_uas
-                improved=True
+                improved = True
         elif what == 'las':
             if best_dev_las < new_dev_las:
                 best_dev_las = new_dev_las
-                improved=True
+                improved = True
         else:
             exit(f"Unknown --early-stopping-improve-on , {what}, . Should be either 'las' or 'uas'")
-
 
         if improved:
             best_epoch = epoch
@@ -307,11 +308,11 @@ for epoch in range(args.epochs):
                 print('quitting')
                 print('-' * 50)
                 print('best model found in epoch', best_epoch)
-                print(str(args.cnn_ce), " ", str(args.cnn_ce_kernel_size), " ", str(args.cnn_ce_out_channels), " ", str(args.cnn_embeddings_size))
+                # print(str(args.cnn_ce), " ", str(args.cnn_ce_kernel_size), " ", str(args.cnn_ce_out_channels), " ",
+                #       str(args.cnn_embeddings_size))
                 print('  dev uas and las:', best_msg, ' ', what)
                 print('\n\n\n\n')
                 sys.exit()
-
 
     else:
         print('saving', model_name)
