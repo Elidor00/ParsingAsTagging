@@ -6,6 +6,7 @@
 
 import argparse
 import matplotlib.pyplot as plt
+from numpy import mean
 from conll import iter_conll
 
 parser = argparse.ArgumentParser()
@@ -24,14 +25,39 @@ def freq(lst):
     return d
 
 
+def calculate_stats(freq_dict: dict) -> dict:
+    """
+    freq: {sentence_len : number of sentence with that length}
+    """
+    return {"tot_sentences": sum(freq_dict.values()), "max_sentence_len": max(freq_dict.keys()),
+            "mean_sentence_len": mean([int(key) for key, _ in freq_dict.items()])}
+
+
 sentence_length = []
 for sentence in iter_conll(args.datafile, args.metadata, verbose=False):
     sentence_length.append(len(sentence))
 
 frequency = freq(sentence_length)
 print(frequency)  # sentence length: number of sentences with that length
-print("Max sentence length in file: ", max(sentence_length))
-# x (sentence length), y (number of sentences with that length)
-plt.bar(frequency.keys(), frequency.values(), width=0.5, log=True, color='g')
-plt.show()
 
+if "train" in args.datafile:
+    name = "TRAIN"
+elif "dev" in args.datafile:
+    name = "DEV"
+else:
+    name = "TEST"
+
+fig, ax = plt.subplots()
+plt.bar(frequency.keys(), frequency.values(), log=True, color='g')
+plt.title('DISTRIBUTION OF SENTENCE LENGTH - ' + name)
+plt.xlabel('Sentence length')
+plt.ylabel('Frequency')
+stats = calculate_stats(frequency)
+print(stats)
+# labels = list(stats.keys())
+# print(labels)
+# handles = [plt.Rectangle((0, 0), 1, 1, stats[label]) for label in labels]
+# plt.legend(handles, labels)
+ax.legend()
+plt.show()
+# plt.savefig(name + ".png", dpi=200, bbox_inches='tight')
