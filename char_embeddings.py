@@ -5,17 +5,18 @@ from torch.nn.utils.rnn import PackedSequence
 
 
 class CharEmbeddings(nn.Module):  # CharacterModel in char_model.py
-    def __init__(self, char_vocab, embedding_dim, hidden_size, num_layers, attention, which_cuda=0):
+    def __init__(self, char_vocab, embedding_dim, hidden_size, num_layers, attention, bidirectional, which_cuda=0):
         super().__init__()
 
         self.device = torch.device(f'cuda:{which_cuda}' if torch.cuda.is_available() else 'cpu')
         print("Using device: ", self.device)
 
-        self.embedding_dim = embedding_dim  # 50
+        self.embedding_dim = embedding_dim  # 50 -> 100 DM
         self.vocab = char_vocab
         self.hidden_size = hidden_size  # 25
         self.num_layer = num_layers  # 1
         self.attention = attention
+        self.num_dir = 2 if bidirectional else 1
 
         self.embeddings = nn.Embedding(
             num_embeddings=len(self.vocab),
@@ -29,16 +30,19 @@ class CharEmbeddings(nn.Module):  # CharacterModel in char_model.py
         """
 
         if self.attention:
-            self.char_attn = nn.Linear(self.num_layer * self.embedding_dim, 1, bias=False)
+            self.char_attn = nn.Linear(self.num_dir * self.hidden_size, 1, bias=False)
             self.char_attn.weight.data.zero_()
 
         self.bilstm = nn.LSTM(
             input_size=embedding_dim,  # 100 (ner tagger), 400 (Pos tagger), 400 (depparse)
             hidden_size=self.hidden_size,  # 100 (ner), 400 (Pos tagger)
             num_layers=self.num_layer,  # uguale (ner tagger)
-            bidirectional=True
-            # dropout = 0 if num_layers == 1 else 0.5
+            bidirectional=True,
+            batch_first=True,
+            dropout=0 if self.num_layer == 1 else 0.5
         )
+
+        self.dropout = nn.Dropout(p=0.5)
 
     def forward(self, sentence_batch):
         # char2index + padding
@@ -49,7 +53,7 @@ class CharEmbeddings(nn.Module):  # CharacterModel in char_model.py
 
         # non_zero_words -> (n_nonpad_words, max_word_length)
         #
-        embeddings = self.embeddings(non_zero_words).to(self.device)
+        embeddings = self.dropout(self.embeddings(non_zero_words).to(self.device))
         # embeddings -> (n_nonpad_words, max_word_length, embeddings_dim)
         # pack
         x = torch.nn.utils.rnn.pack_padded_sequence(embeddings, non_zero_lengths, batch_first=True)
@@ -57,7 +61,7 @@ class CharEmbeddings(nn.Module):  # CharacterModel in char_model.py
         output, hidden = self.bilstm(x)  # output size: PackedSequence 4: bs = 16, data = 6888
 
         if self.attention:
-            weights = torch.sigmoid(self.char_attn(output.data))
+            weights = torch.sigmoid(self.char_attn(self.dropout(output.data)))
             output = PackedSequence(output.data * weights, output.batch_sizes)
             # char_reps, _ = torch.nn.utils.rnn.pad_packed_sequence(char_reps, batch_first=True)
             # output = char_reps.sum(1)

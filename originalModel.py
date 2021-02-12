@@ -156,7 +156,8 @@ class Pat(BaseModel):
                 embedding_dim=self.char_emb_size,
                 hidden_size=self.char_emb_hidden_size,
                 num_layers=1,
-                attention=True
+                attention=True,
+                bidirectional=True
             ).to(self.device)
 
         if self.cnn_ce:
