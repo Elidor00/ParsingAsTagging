@@ -167,7 +167,7 @@ def count_parameters(m):
 
 
 # if bert is used, generate bert_features
-if (args.bert and args.bert_load_features) is not True:
+if args.bert and args.bert_load_features != True:
     print('\nloading BERT...')
     # 168 here because it's the longest sentence in our training dataset
     # FIXME: add max_seq_length as parameter
