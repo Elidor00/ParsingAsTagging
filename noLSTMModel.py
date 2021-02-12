@@ -11,7 +11,8 @@ from embeddings import *
 from positional_embeddings import PositionalEmbeddings
 
 '''
-In this model I only removed the biLSTM and not even the hidden layers (MLP) connected to it
+In this model I only removed the biLSTM and not even the hidden layers (MLP-) connected to it
+A kind of ablation analysis
 '''
 
 
@@ -135,7 +136,9 @@ class Pat(BaseModel):
             self.char_embedding = CharEmbeddings(
                 char_vocab=self.char_vocab,
                 embedding_dim=self.char_emb_size,
-                hidden_size=self.char_emb_hidden_size
+                hidden_size=self.char_emb_hidden_size,
+                num_layers=1,
+                attention=True
             ).to(self.device)
 
         if self.cnn_ce:

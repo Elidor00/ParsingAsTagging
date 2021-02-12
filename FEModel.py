@@ -154,7 +154,9 @@ class Pat(BaseModel):
             self.char_embedding = CharEmbeddings(
                 char_vocab=self.char_vocab,
                 embedding_dim=self.char_emb_size,
-                hidden_size=self.char_emb_hidden_size
+                hidden_size=self.char_emb_hidden_size,
+                num_layers=1,
+                attention=True
             ).to(self.device)
 
         if self.cnn_ce:

@@ -1,10 +1,11 @@
 import torch
 from torch.nn import functional as F
 from torch import nn
+from torch.nn.utils.rnn import PackedSequence
 
 
 class CharEmbeddings(nn.Module):  # CharacterModel in char_model.py
-    def __init__(self, char_vocab, embedding_dim, hidden_size, which_cuda=0):
+    def __init__(self, char_vocab, embedding_dim, hidden_size, num_layers, attention, which_cuda=0):
         super().__init__()
 
         self.device = torch.device(f'cuda:{which_cuda}' if torch.cuda.is_available() else 'cpu')
@@ -13,26 +14,28 @@ class CharEmbeddings(nn.Module):  # CharacterModel in char_model.py
         self.embedding_dim = embedding_dim  # 50
         self.vocab = char_vocab
         self.hidden_size = hidden_size  # 25
+        self.num_layer = num_layers  # 1
+        self.attention = attention
 
         self.embeddings = nn.Embedding(
             num_embeddings=len(self.vocab),
-            embedding_dim=embedding_dim,  # 100 (ner tagger), 400 (Pos tagger), 400 (depparse)
+            embedding_dim=self.embedding_dim,  # 100 (ner tagger), 400 (Pos tagger), 400 (depparse)
             padding_idx=self.vocab.pad
         )
 
         """
         in ner Bidirectional True and Attention False
         self.num_dir = 2 if bidirectional else 1
-        
-            if self.attention: 
-        self.char_attn = nn.Linear(self.num_dir * self.args['char_hidden_dim'], 1, bias=False)
-        self.char_attn.weight.data.zero_()
         """
+
+        if self.attention:
+            self.char_attn = nn.Linear(self.num_layer * self.embedding_dim, 1, bias=False)
+            self.char_attn.weight.data.zero_()
 
         self.bilstm = nn.LSTM(
             input_size=embedding_dim,  # 100 (ner tagger), 400 (Pos tagger), 400 (depparse)
             hidden_size=self.hidden_size,  # 100 (ner), 400 (Pos tagger)
-            num_layers=1,  # uguale (ner tagger)
+            num_layers=self.num_layer,  # uguale (ner tagger)
             bidirectional=True
             # dropout = 0 if num_layers == 1 else 0.5
         )
@@ -51,19 +54,26 @@ class CharEmbeddings(nn.Module):  # CharacterModel in char_model.py
         # pack
         x = torch.nn.utils.rnn.pack_padded_sequence(embeddings, non_zero_lengths, batch_first=True)
         # pass through lstm
-        output, hidden = self.bilstm(x)
-        x, _ = torch.nn.utils.rnn.pad_packed_sequence(output, batch_first=True)
+        output, hidden = self.bilstm(x)  # output size: PackedSequence 4: bs = 16, data = 6888
+
+        if self.attention:
+            weights = torch.sigmoid(self.char_attn(output.data))
+            output = PackedSequence(output.data * weights, output.batch_sizes)
+            # char_reps, _ = torch.nn.utils.rnn.pad_packed_sequence(char_reps, batch_first=True)
+            # output = char_reps.sum(1)
+
+        x, _ = torch.nn.utils.rnn.pad_packed_sequence(output, batch_first=True)   # x tensor size: 1551
         # embeddings -> (n_nonpad_words, max_word_length, hidden_size*2)
 
         # take the output of the lstm correctly
         # see https://towardsdatascience.com/understanding-bidirectional-rnn-in-pytorch-5bd25a5dd66
-        ## filter idx is the id of the last character in each word
-        ## this aims to find the output of the lshtm on the last non pad char
-        ## ex: ['h', 'e', 'l', 'l', 'o', '<pad>']
-        ## instead of getting the output of '<pad>' we want the output of 'o'
-        filter_idx = non_zero_lengths.long().view(-1, 1, 1).expand(-1, 1, self.hidden_size*2) -1
+        # filter idx is the id of the last character in each word
+        # this aims to find the output of the lshtm on the last non pad char
+        # ex: ['h', 'e', 'l', 'l', 'o', '<pad>']
+        # instead of getting the output of '<pad>' we want the output of 'o'
+        filter_idx = non_zero_lengths.long().view(-1, 1, 1).expand(-1, 1, self.hidden_size*2) - 1
         # filter_idx -> (n_nonpad_words), max_word_length, hidden_size*2)
-        forward_out = x.gather(1, filter_idx).squeeze(1)[:,:self.hidden_size]
+        forward_out = x.gather(1, filter_idx).squeeze(1)[:, :self.hidden_size]
         # filter_idx -> (n_nonpad_words, hidden_size)
 
         # get the output of the first character
@@ -72,7 +82,7 @@ class CharEmbeddings(nn.Module):  # CharacterModel in char_model.py
         x = torch.cat([forward_out, backward_out], 1)
         # x -> (n_nonpad_words, hidden_size*2)
         #
-        x = torch.cat([x, torch.zeros(len(words)-len(non_zero_words), self.hidden_size*2).to(self.device)],0)
+        x = torch.cat([x, torch.zeros(len(words)-len(non_zero_words), self.hidden_size*2).to(self.device)], 0)
         # x -> (n_pad_words, hidden_size*2)
         # unsort
         x = x[unsort_idx]
@@ -127,7 +137,7 @@ class CharEmbeddings(nn.Module):  # CharacterModel in char_model.py
 class CNNCharEmbeddings(CharEmbeddings):
     def __init__(self, char_vocab, cnn_embeddings_size, cnn_ce_kernel_size, cnn_ce_out_channels, which_cuda=0):
         torch.backends.cudnn.deterministic = True
-        CharEmbeddings.__init__(self, char_vocab, cnn_embeddings_size, 1, which_cuda=which_cuda)
+        CharEmbeddings.__init__(self, char_vocab, cnn_embeddings_size, 1, 1, False, which_cuda=which_cuda)
 
         self.embedding_dim = cnn_embeddings_size
         self.vocab = char_vocab
@@ -153,8 +163,10 @@ class CNNCharEmbeddings(CharEmbeddings):
         embeddings = self.embeddings(non_zero_words).to(self.device)
 
         x = self.cnn(embeddings.transpose(1,2))
-        mask = (torch.arange(x.shape[2]).expand(x.shape).to(self.device) < non_zero_lengths.unsqueeze(1).unsqueeze(1).to(self.device)).float()
-        x_min = (torch.arange(x.shape[2]).expand(x.shape).to(self.device) >= non_zero_lengths.unsqueeze(1).unsqueeze(1).to(self.device)).float() * torch.min(x)
+        mask = (torch.arange(x.shape[2]).expand(x.shape).to(self.device) < non_zero_lengths.unsqueeze(1).unsqueeze(1)
+                .to(self.device)).float()
+        x_min = (torch.arange(x.shape[2]).expand(x.shape).to(self.device) >= non_zero_lengths.unsqueeze(1).unsqueeze(1)
+                 .to(self.device)).float() * torch.min(x)
         x_min = x_min.detach().float()
         x = x * mask + x_min
         x = F.relu(x)
@@ -162,11 +174,11 @@ class CNNCharEmbeddings(CharEmbeddings):
             kernel_size=x.shape[2]
         )(x)
 
-        x=x.view([x.shape[0], x.shape[1]])
+        x = x.view([x.shape[0], x.shape[1]])
         x = torch.cat([x, torch.zeros(len(words)-len(non_zero_words), self.cnn_ce_out_channels).to(self.device)],0)
 
         x = x[unsort_idx]
-        x = x.view(len(sentence_batch), -1 , self.cnn_ce_out_channels)
+        x = x.view(len(sentence_batch), -1, self.cnn_ce_out_channels)
 
         return x
 
