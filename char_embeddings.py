@@ -48,11 +48,11 @@ class CharEmbeddings(nn.Module):
             dropout=0 if self.num_layer == 1 else 0.5
         )
 
-        self.bilstm_h_init = nn.Parameter(
-            torch.zeros(self.num_dir * self.num_layer, 1, self.hidden_size))
-
-        self.bilstm_c_init = nn.Parameter(
-            torch.zeros(self.num_dir * self.num_layer, 1, self.hidden_size))
+        # self.bilstm_h_init = nn.Parameter(
+        #     torch.zeros(self.num_dir * self.num_layer, 1, self.hidden_size))
+        #
+        # self.bilstm_c_init = nn.Parameter(
+        #     torch.zeros(self.num_dir * self.num_layer, 1, self.hidden_size))
 
         self.dropout = nn.Dropout(p=0.5)
 
@@ -71,22 +71,22 @@ class CharEmbeddings(nn.Module):
         # pack
         x = torch.nn.utils.rnn.pack_padded_sequence(embeddings, non_zero_lengths, batch_first=True)
         # pass through lstm
-        # output, hidden = self.bilstm(x)  # output size: PackedSequence 4: bs = 16, data = 6888
+        output, hidden = self.bilstm(x)  # output size: PackedSequence 4: bs = 16, data = 6888
 
-        output = self.bilstm(x, hx=(
-            self.bilstm_h_init.expand(self.num_dir * self.num_layer, bs,
-                                      self.hidden_size).contiguous(),
-            self.bilstm_c_init.expand(self.num_dir * self.num_layer, bs,
-                                      self.hidden_size).contiguous()))
+        # output = self.bilstm(x, hx=(
+        #     self.bilstm_h_init.expand(self.num_dir * self.num_layer, bs,
+        #                               self.hidden_size).contiguous(),
+        #     self.bilstm_c_init.expand(self.num_dir * self.num_layer, bs,
+        #                               self.hidden_size).contiguous()))
 
         if self.attention:
-            char_reps = output[0]
-            weights = torch.sigmoid(self.char_attn(self.dropout(char_reps.data)))
-            char_reps = PackedSequence(char_reps.data * weights, char_reps.batch_sizes)
+            # char_reps = output[0]
+            weights = torch.sigmoid(self.char_attn(self.dropout(output.data)))
+            output = PackedSequence(output.data * weights, output.batch_sizes)
             # char_reps, _ = torch.nn.utils.rnn.pad_packed_sequence(char_reps, batch_first=True)
             # output = char_reps.sum(1)
 
-        x, _ = torch.nn.utils.rnn.pad_packed_sequence(char_reps, batch_first=True)  # x tensor size: 1551
+        x, _ = torch.nn.utils.rnn.pad_packed_sequence(output, batch_first=True)  # x tensor size: 1551
         # embeddings -> (n_nonpad_words, max_word_length, hidden_size*2)
 
         # take the output of the lstm correctly
@@ -163,7 +163,8 @@ class CharEmbeddings(nn.Module):
 class CNNCharEmbeddings(CharEmbeddings):
     def __init__(self, char_vocab, cnn_embeddings_size, cnn_ce_kernel_size, cnn_ce_out_channels, which_cuda=0):
         torch.backends.cudnn.deterministic = True
-        CharEmbeddings.__init__(self, char_vocab, cnn_embeddings_size, 1, 1, False, which_cuda=which_cuda)
+        CharEmbeddings.__init__(self, char_vocab, cnn_embeddings_size, 1, 1, False, which_cuda=which_cuda
+                                , bidirectional=False)
 
         self.embedding_dim = cnn_embeddings_size
         self.vocab = char_vocab
