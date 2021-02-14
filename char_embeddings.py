@@ -54,7 +54,8 @@ class CharEmbeddings(nn.Module):
         # self.bilstm_c_init = nn.Parameter(
         #     torch.zeros(self.num_dir * self.num_layer, 1, self.hidden_size))
 
-        self.dropout = nn.Dropout(p=0.5)
+        if not isinstance(self, CNNCharEmbeddings):
+            self.dropout = nn.Dropout(p=0.5)
 
     def forward(self, sentence_batch):
         # char2index + padding
