@@ -263,9 +263,9 @@ class Pat(BaseModel):
         nn.init.xavier_normal_(self.tag_embedding.weight)
         # init.xavier the nn.Linear in MLP
         # for layer1, layer2 in zip(self.bilstm_to_hidden1.layers.modules(), self.hidden1_to_hidden2.layers.modules()):
-            # if isinstance(layer1, nn.Linear) and isinstance(layer1, nn.Linear):
-                # nn.init.xavier_normal_(layer1.weight)
-                # nn.init.xavier_normal_(layer2.weight)
+        # if isinstance(layer1, nn.Linear) and isinstance(layer1, nn.Linear):
+        # nn.init.xavier_normal_(layer1.weight)
+        # nn.init.xavier_normal_(layer2.weight)
         # TODO: decomment the following line if you don't use biaffine scorer
         nn.init.xavier_normal_(self.hidden2_to_pos.weight)
         nn.init.xavier_normal_(self.hidden2_to_dep.weight)
@@ -274,7 +274,7 @@ class Pat(BaseModel):
                 pass
             else:
                 # if 'bias' in name:
-                #   nn.init.constant_(param, 0)
+                # nn.init.constant_(param, 0)
                 if 'weight' in name:
                     nn.init.xavier_normal_(param)
 

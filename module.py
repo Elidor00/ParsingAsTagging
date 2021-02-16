@@ -163,7 +163,7 @@ class MyLSTMSA(nn.Module):
         # self.norm_1 = Norm(self.hidden_size * 2)
         self.atten1 = SelfAttention(self.hidden_size * 2, batch_first=batch_first)  # 2 is bidirectional
 
-    @ staticmethod
+    @staticmethod
     def simple_elementwise_apply(fn, packed_sequence):
         """applies a pointwise function fn to each element in packed_sequence"""
         return torch.nn.utils.rnn.PackedSequence(fn(packed_sequence.data), packed_sequence.batch_sizes)
