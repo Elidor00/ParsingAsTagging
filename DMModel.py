@@ -219,14 +219,18 @@ class Pat(BaseModel):
             in_features=self.bilstm_hidden_size * 2,
             out_features=self.mlp_hidden_size,  # 800
             depth=1,
-            flag=True
+            flag=True,
+            before_act=False,
+            after_act=False
         )
 
         self.hidden1_to_hidden2 = MLP(
             in_features=self.mlp_hidden_size,  # 800
             out_features=self.mlp_output_size,  # 500
             depth=1,
-            flag=False
+            flag=False,
+            before_act=False,
+            after_act=False
         )
 
         self.hidden2_to_pos = nn.Linear(
@@ -266,7 +270,7 @@ class Pat(BaseModel):
         # if isinstance(layer1, nn.Linear) and isinstance(layer1, nn.Linear):
         # nn.init.xavier_normal_(layer1.weight)
         # nn.init.xavier_normal_(layer2.weight)
-        # TODO: decomment the following line if you don't use biaffine scorer
+        # TODO: comment the following line if you use DeepBiaffineScorer
         nn.init.xavier_normal_(self.hidden2_to_pos.weight)
         nn.init.xavier_normal_(self.hidden2_to_dep.weight)
         for name, param in self.bilstm.named_parameters():

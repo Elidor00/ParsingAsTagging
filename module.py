@@ -22,16 +22,27 @@ class MLP(nn.Module):
             Default: 0.3.
     """
 
-    def __init__(self, in_features, out_features, depth, flag, activation='ReLU', dropout=0.3):
+    def __init__(self, in_features, out_features, depth, flag, before_act, after_act,
+                 activation='ReLU', dropout=0.3):
         super(MLP, self).__init__()
         self.layers = nn.Sequential()
         act_fn = getattr(nn, activation)
         for i in range(depth):
             self.layers.add_module('fc_{}'.format(i),
                                    nn.Linear(in_features, out_features))
+
+            if before_act:
+                self.layers.add_module('bn_{}'.format(i),
+                                       BatchNorm1d(out_features))
+
             if activation:
                 self.layers.add_module('{}_{}'.format(activation, i),
                                        act_fn())
+
+            if after_act:
+                self.layers.add_module('bn_{}'.format(i),
+                                       BatchNorm1d(out_features))
+
             if dropout and flag:
                 self.layers.add_module('dropout_{}'.format(i),
                                        nn.Dropout(dropout))
@@ -130,7 +141,8 @@ class SelfAttention(nn.Module):
         ##################################################################
 
         # multiply each hidden state with the attention weights
-        weighted = torch.mul(inputs, scores.unsqueeze(-1).expand_as(inputs))
+        scores = scores.unsqueeze(-1).expand_as(inputs)
+        weighted = torch.mul(inputs, scores)
         # sum the hidden states
         # representations = weighted.sum(1).squeeze()
         representations = weighted
@@ -171,7 +183,7 @@ class MyLSTMSA(nn.Module):
     def forward(self, x, x_len):
         x = nn.utils.rnn.pack_padded_sequence(x, x_len, batch_first=True)
         out1, (h_n, c_n) = self.lstm1(x)
-        # out1 = (seq_len, batch, num_directions * hidden_size)
+        # out1 = (batch, seq_len, num_directions * hidden_size)
         # h_n = (num_layers * num_directions, batch, hidden_size)
         out1 = self.simple_elementwise_apply(self.batch_norm, out1)
         x, lengths = nn.utils.rnn.pad_packed_sequence(out1, batch_first=True)
@@ -248,6 +260,9 @@ class DeepBiaffineScorer(nn.Module):
         self.hidden_func = hidden_func
         self.scorer = BiaffineScorer(hidden_size, hidden_size, output_size)  # 400,400,len(deprel)
         self.dropout = nn.Dropout(dropout)
+
+        nn.init.xavier_normal_(self.W1.weight)
+        nn.init.xavier_normal_(self.W2.weight)
 
     def forward(self, input1, input2):
         return self.scorer(self.dropout(self.hidden_func(self.W1(input1))),
