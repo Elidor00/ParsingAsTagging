@@ -5,7 +5,9 @@
 #   ./printsentencelength.py --metadata data.conllu
 
 import argparse
+import os
 import matplotlib.pyplot as plt
+import seaborn as sns
 from numpy import mean
 from conll import iter_conll
 
@@ -37,27 +39,29 @@ sentence_length = []
 for sentence in iter_conll(args.datafile, args.metadata, verbose=False):
     sentence_length.append(len(sentence))
 
-frequency = freq(sentence_length)
-print(frequency)  # sentence length: number of sentences with that length
+frequencies = freq(sentence_length)
+print(frequencies)  # sentence length: number of sentences with that length
+
+name = "Frequency_"
 
 if "train" in args.datafile:
-    name = "TRAIN"
+    name += "TRAIN_SET"
 elif "dev" in args.datafile:
-    name = "DEV"
+    name += "DEV_SET"
 else:
-    name = "TEST"
+    name += "TEST_SET"
 
-fig, ax = plt.subplots()
-plt.bar(frequency.keys(), frequency.values(), log=True, color='g')
-plt.title('DISTRIBUTION OF SENTENCE LENGTH - ' + name)
+stats = calculate_stats(frequencies)
+
+freq_plot = sns.histplot(x=frequencies.keys(), weights=frequencies.values(), discrete=True,
+                  kde=True, kde_kws={'bw_adjust': 0.2}, line_kws={'linewidth': 3}, stat="frequency")
+freq_plot.margins(x=0.01)
+freq_plot.set_title('DISTRIBUTION OF SENTENCE LENGTHS - ' + name.split("_")[1])
 plt.xlabel('Sentence length')
-plt.ylabel('Frequency')
-stats = calculate_stats(frequency)
-print(stats)
-# labels = list(stats.keys())
-# print(labels)
-# handles = [plt.Rectangle((0, 0), 1, 1, stats[label]) for label in labels]
-# plt.legend(handles, labels)
-ax.legend()
 plt.show()
-# plt.savefig(name + ".png", dpi=200, bbox_inches='tight')
+fig = freq_plot.get_figure()
+
+if not os.path.exists("./img"):
+    os.mkdir("./img")
+
+fig.savefig(os.path.join("./img", name + ".png"), bbox_inches='tight')

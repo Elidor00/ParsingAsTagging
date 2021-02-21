@@ -132,6 +132,8 @@ dmypy.json
 \.idea/
 *__pycache__/
 
-
 # Data and model weight
 data/UD_2.6/it
+
+# Images
+img/

@@ -34,3 +34,4 @@ torchvision==0.5.0
 tqdm==4.48.2
 transformers==3.0.2
 urllib3==1.25.11
+seaborn==0.11.1
