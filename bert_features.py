@@ -35,6 +35,10 @@ class Bert(object):
         # self.model = BertModel.from_pretrained(pretrained_model).to(self.device)
         # UmBERTo is a Roberta-based Language Model trained on large Italian Corpora
         self.model = AutoModel.from_pretrained(pretrained_model).to(self.device)
+        # you can use a fine tuned model specifying the path of the folder containing the following files:
+        # vocab.txt (vocabulary file), pytorch_model.bin (pytorch compatible model),
+        # config.json (json-based model config)
+        # self.model = AutoModel.from_pretrained("tmp/").to(self.device)
 
         # tells pytorch to run in evaluation mode instead of training
         self.model.eval()
