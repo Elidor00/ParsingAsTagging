@@ -16,6 +16,7 @@ parser.add_argument('--no-pos', dest='pos', action='store_false', help="don't pr
 parser.add_argument('--metadata', action='store_true', help='specify if file contains metadata or compound words')
 args = parser.parse_args()
 
+total = 0
 rel_pos = []
 out_of_range = 0
 punct = 0
@@ -24,6 +25,7 @@ right_threshold = 50
 for sentence in iter_conll(args.datafile, args.metadata, verbose=False):
     for entry in sentence:
         if entry.id > 0:
+            total += 1
             result = []
             if args.deprel:
                 result.append(entry.deprel)
@@ -36,5 +38,6 @@ for sentence in iter_conll(args.datafile, args.metadata, verbose=False):
                     out_of_range += 1
             print(' '.join(result))
 # print("Max relative position: ", max(rel_pos, key=abs))
-print("N. relative position out of empirical range: ", out_of_range)
+print("Total number of token: ", total)
+print("N. relative position out of empirical range: ", out_of_range, " = ", round((out_of_range / total) * 100, 2), "%")
 print("N. of punct deprel tag: ", punct)

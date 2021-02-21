@@ -52,11 +52,12 @@ else:
     name += "TEST_SET"
 
 stats = calculate_stats(frequencies)
+# print(stats)
 
 freq_plot = sns.histplot(x=frequencies.keys(), weights=frequencies.values(), discrete=True,
                   kde=True, kde_kws={'bw_adjust': 0.2}, line_kws={'linewidth': 3}, stat="frequency")
 freq_plot.margins(x=0.01)
-freq_plot.set_title('DISTRIBUTION OF SENTENCE LENGTHS - ' + name.split("_")[1])
+freq_plot.set_title('DISTRIBUTION OF SENTENCE LENGTHS - ' + name.split("_")[1] + " SET")
 plt.xlabel('Sentence length')
 plt.show()
 fig = freq_plot.get_figure()

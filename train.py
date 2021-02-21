@@ -15,6 +15,7 @@ import time
 from bert_features import Bert
 from modelDict import model
 import importlib
+from tqdm import tqdm
 
 # TODO things to modify:
 #  1) batch size to a power of n -- DONE - not tested yet.
@@ -252,7 +253,7 @@ for epoch in range(args.epochs):
     start = time.time()
     print('starting epoch', epoch)
     random.shuffle(train)
-    for batch in chunker(train, args.batch_size):
+    for batch in tqdm(chunker(train, args.batch_size), desc="Training..."):
         # clear gradients
         optimizer.zero_grad()
         # calculate loss
