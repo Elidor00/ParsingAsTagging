@@ -13,11 +13,13 @@ parser = argparse.ArgumentParser()
 parser.add_argument('datafile')
 parser.add_argument('--no-deprel', dest='deprel', action='store_false', help="don't print dependencies")
 parser.add_argument('--no-pos', dest='pos', action='store_false', help="don't print relative positions")
+parser.add_argument('--no-postag', dest='pos_tag', action='store_false', help="don't print pos tag")
 parser.add_argument('--metadata', action='store_true', help='specify if file contains metadata or compound words')
 args = parser.parse_args()
 
 total = 0
 rel_pos = []
+pos_tag = {}
 out_of_range = 0
 punct = 0
 left_threshold = -50
@@ -36,8 +38,15 @@ for sentence in iter_conll(args.datafile, args.metadata, verbose=False):
                 rel_pos.append(entry.pos)
                 if entry.pos <= left_threshold or entry.pos >= right_threshold:  # empirical range [-50, 50]
                     out_of_range += 1
+            if args.pos_tag:
+                result.append(str(entry.upos))
+                if str(entry.upos) in pos_tag:
+                    pos_tag[str(entry.upos)] += 1
+                else:
+                    pos_tag[str(entry.upos)] = 1
             print(' '.join(result))
 # print("Max relative position: ", max(rel_pos, key=abs))
 print("Total number of token: ", total)
 print("N. relative position out of empirical range: ", out_of_range, " = ", round((out_of_range / total) * 100, 2), "%")
 print("N. of punct deprel tag: ", punct)
+print("Dict of ", sum(pos_tag.values()), " Universal PoS-tag: ", pos_tag)
