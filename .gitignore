@@ -137,3 +137,6 @@ data/UD_2.6/it
 
 # Images
 img/
+
+# Pre-trained model
+pre_trained_model/
