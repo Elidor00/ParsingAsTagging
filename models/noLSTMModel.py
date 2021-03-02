@@ -1,14 +1,15 @@
 import pickle
 import re
 
+import torch
 from torch import nn
 from torch.nn import functional as F
 
+from embeddings.embeddings import load_glove, from_vocab_to_weight_matrix
 from models.baseModel import BaseModel
-from bert_features import from_tensor_list_to_one_tensor
-from char_embeddings import CharEmbeddings, CNNCharEmbeddings
-from embeddings import *
-from positional_embeddings import PositionalEmbeddings
+from embeddings.bert.bert_features import from_tensor_list_to_one_tensor
+from embeddings.char_embeddings import CharEmbeddings, CNNCharEmbeddings
+from embeddings.positional_embeddings import PositionalEmbeddings
 
 '''
 In this model I only removed the biLSTM and not even the hidden layers (MLP-) connected to it

@@ -5,12 +5,11 @@ from torch import nn
 from torch.nn import functional as F
 
 from models.baseModel import BaseModel
-from bert_features import from_tensor_list_to_one_tensor
-from char_embeddings import CharEmbeddings, CNNCharEmbeddings
-from embeddings import *
-from module import MLP, SelfAttention, MyLSTMSA, MyLSTM_MHSA, DeepBiaffineScorer
-from positional_embeddings import PositionalEmbeddings
-from positional_encoding import PositionalEncoding
+from embeddings.bert.bert_features import from_tensor_list_to_one_tensor
+from embeddings.char_embeddings import CharEmbeddings, CNNCharEmbeddings
+from module import MLP, MyLSTMSA
+from embeddings.positional_embeddings import PositionalEmbeddings
+from embeddings.positional_encoding import PositionalEncoding
 
 '''
 Model with some improvement by Dozat and Manning Parser

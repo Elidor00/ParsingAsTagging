@@ -12,7 +12,7 @@ from utils import chunker, parse_uas, get_slanted_triangular_lr
 from conll import read_conll, eval_conll, parse_conll
 from vocabulary import *
 import time
-from bert_features import Bert
+from embeddings.bert.bert_features import Bert
 from models.modelDict import model
 import importlib
 from tqdm import tqdm

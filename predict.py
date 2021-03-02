@@ -7,7 +7,7 @@ import random
 import numpy as np
 import importlib
 
-from bert_features import Bert
+from embeddings.bert.bert_features import Bert
 from conll import read_conll, eval_conll, parse_conll
 from models.modelDict import model
 
