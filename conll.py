@@ -4,7 +4,6 @@ import subprocess
 from utils import normalize, chunker
 
 
-
 def read_conll(filename, metadata, include_non_projective=True, verbose=True, lower_case=True):
     """Reads dependency annotations from CoNLL-U format"""
     return list(iter_conll(filename, metadata, include_non_projective, verbose, lower_case))
@@ -41,7 +40,6 @@ def eval_conll(sentences, gold_filename, metadata, verbose=True):
         return m1.group(1), m2.group(1)
 
 
-
 def parse_conll(parser, sentences, batch_size, clear=True):
     if clear:
         clear_dependencies(sentences)
@@ -52,14 +50,12 @@ def parse_conll(parser, sentences, batch_size, clear=True):
               round((parser.nr_of_cycles / len(sentences)), 2), "%")
 
 
-
 def clear_dependencies(sentences):
     for sentence in sentences:
         for entry in sentence:
             entry.head = None
             entry.deprel = None
             entry.pos = None
-
 
 
 def iter_conll(filename, metadata, include_non_projective=True, verbose=True, lower_case=True):
@@ -104,7 +100,6 @@ def iter_conll(filename, metadata, include_non_projective=True, verbose=True, lo
         print(f'{read:,} sentences read.')
         print(f'{non_proj:,} non-projective sentences found, {dropped:,} dropped.')
         print(f'{read-dropped:,} sentences remaining.')
-
 
 
 def is_projective(sentence):

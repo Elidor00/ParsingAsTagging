@@ -1,7 +1,8 @@
 import numpy as np
 import torch
 
-# dowwnloaded glove from http://nlp.stanford.edu/data/glove.6B.zip
+# downloaded glove from http://nlp.stanford.edu/data/glove.6B.zip
+
 
 # receives a path
 # returns a dictionary with word -> embeddings

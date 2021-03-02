@@ -269,7 +269,7 @@ class DeepBiaffineScorer(nn.Module):
                            self.dropout(self.hidden_func(self.W2(input2))))
 
 
-class MultiheadAttention(nn.Module):
+class MultiheadAttentionImpl(nn.Module):
 
     def __init__(self, num_units, num_heads=1, dropout_rate=0, gpu=True, causality=False):
         """
@@ -280,7 +280,7 @@ class MultiheadAttention(nn.Module):
             causality: Boolean. If true, units that reference the future are masked.
             num_heads: An int. Number of heads.
         """
-        super(MultiheadAttention, self).__init__()
+        super(MultiheadAttentionImpl, self).__init__()
         self.gpu = gpu
         self.num_units = num_units
         self.num_heads = num_heads
@@ -313,7 +313,7 @@ class MultiheadAttention(nn.Module):
         outputs = outputs / (K_.size()[-1] ** 0.5)
 
         # Activation
-        if last_layer == False:
+        if not last_layer:
             outputs = F.softmax(outputs, dim=-1)  # (h*N, T_q, T_k)
         # Query Masking
         query_masks = torch.sign(torch.abs(torch.sum(queries, dim=-1)))  # (N, T_q)
@@ -322,7 +322,7 @@ class MultiheadAttention(nn.Module):
         outputs = outputs * query_masks
         # Dropouts
         outputs = self.output_dropout(outputs)  # (h*N, T_q, T_k)
-        if last_layer == True:
+        if last_layer:
             return outputs
         # Weighted sum
         outputs = torch.bmm(outputs, V_)  # (h*N, T_q, C/h)

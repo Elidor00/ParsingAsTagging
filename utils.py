@@ -2,7 +2,6 @@ import re
 import math
 
 
-
 def normalize(word, to_lower = True):
     """returns a normalized version of the given word"""
     if re.fullmatch(r'[-+]?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?', word):
@@ -23,11 +22,11 @@ def chunker(sequence, size):
         yield chunk
 
 
-
 def parse_uas(uas):
     m = re.search(r'(\d+) / (\d+)', uas)
     correct, total = m.groups()
     return float(correct) / float(total)
+
 
 # Returns the first element in the collection that has predicate(element) True. If none exists, returns if_not
 def first(collection, predicate, if_not = None):

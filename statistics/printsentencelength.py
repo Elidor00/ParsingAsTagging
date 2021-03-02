@@ -62,7 +62,7 @@ plt.xlabel('Sentence length')
 plt.show()
 fig = freq_plot.get_figure()
 
-if not os.path.exists("./img"):
-    os.mkdir("./img")
+if not os.path.exists("../img"):
+    os.mkdir("../img")
 
-fig.savefig(os.path.join("./img", name + ".png"), bbox_inches='tight')
+fig.savefig(os.path.join("../img", name + ".png"), bbox_inches='tight')
