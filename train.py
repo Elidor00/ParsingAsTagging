@@ -13,7 +13,7 @@ from conll import read_conll, eval_conll, parse_conll
 from vocabulary import *
 import time
 from bert_features import Bert
-from modelDict import model
+from models.modelDict import model
 import importlib
 from tqdm import tqdm
 
@@ -60,7 +60,7 @@ parser.add_argument('--char-emb-size', type=int, default=50, help='size of embed
 
 parser.add_argument('--position-emb', action='store_true', help='use position embeddings')
 parser.add_argument('--position-emb-max-pos', type=int, default=25413, help='max position that can be encoded to embeddings')  # input = number of different words
-parser.add_argument('--position-emb-size', type=int, default=380, help='position embeddings size')  # output = max sentence length
+parser.add_argument('--position-emb-size', type=int, default=200, help='position embeddings size')  # output = max sentence length
 
 parser.add_argument('--position-enc', action='store_true', help='use position encoding')
 
@@ -224,7 +224,8 @@ what = args.early_stopping_on
 
 print('\ntraining')
 model_type = model[args.choose_model]
-model_module = importlib.import_module(model_type)
+# model_module = importlib.import_module(model_type)
+model_module = importlib.import_module("." + model_type, package="models")
 pat = model_module.Pat(args, word_vocab, tag_vocab, pos_vocab, deprel, char_vocab).to(device)
 print("Model:")
 print(pat)

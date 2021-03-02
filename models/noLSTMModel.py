@@ -4,7 +4,7 @@ import re
 from torch import nn
 from torch.nn import functional as F
 
-from baseModel import BaseModel
+from models.baseModel import BaseModel
 from bert_features import from_tensor_list_to_one_tensor
 from char_embeddings import CharEmbeddings, CNNCharEmbeddings
 from embeddings import *

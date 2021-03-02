@@ -9,7 +9,7 @@ import importlib
 
 from bert_features import Bert
 from conll import read_conll, eval_conll, parse_conll
-from modelDict import model
+from models.modelDict import model
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('model', help='serialized model')

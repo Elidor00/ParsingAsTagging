@@ -4,22 +4,20 @@ import re
 from torch import nn
 from torch.nn import functional as F
 
-from baseModel import BaseModel
+from models.baseModel import BaseModel
 from bert_features import from_tensor_list_to_one_tensor
 from char_embeddings import CharEmbeddings, CNNCharEmbeddings
 from embeddings import *
+from module import MLP, SelfAttention, MyLSTMSA, MyLSTM_MHSA, DeepBiaffineScorer
 from positional_embeddings import PositionalEmbeddings
 from positional_encoding import PositionalEncoding
 
 '''
-Original PaT Model
-The original model consists of:
- - bert embeddings (feature extraction)
- - word and tag embedding
- - char embedding with cnn (you can use the one with lstm)
- - bilstm
- - 2 hidden layer (MLP)
- - 2 linear layer for classification   
+Model with some improvement by Dozat and Manning Parser
+Some modification:
+- char emb with LSTM
+- MLP module similar to those present in DM
+- self attention bilstm
 '''
 
 
@@ -184,7 +182,8 @@ class Pat(BaseModel):
             padding_idx=self.tag_vocab.pad,
         )
 
-        self.bilstm = nn.LSTM(
+        # BiLSTM with Self-Attention
+        self.bilstm = MyLSTMSA(
             input_size=self.bilstm_input_size,
             hidden_size=self.bilstm_hidden_size,
             num_layers=self.bilstm_num_layers,
@@ -193,14 +192,45 @@ class Pat(BaseModel):
             dropout=self.bilstm_dropout
         )
 
-        self.bilstm_to_hidden1 = nn.Linear(
+        # BiLSTM with Multi Head Self-Attention
+        # self.bilstm = MyLSTM_MHSA(
+        #     input_size=self.bilstm_input_size,
+        #     hidden_size=self.bilstm_hidden_size,
+        #     num_layers=self.bilstm_num_layers,
+        #     batch_first=True,
+        #     bidirectional=True,
+        #     dropout=self.bilstm_dropout
+        # )
+
+        # Batch Normalized LSTM
+        # self.bilstm = LSTM(
+        #     cell_class=BNLSTMCell,
+        #     input_size=self.bilstm_input_size,
+        #     hidden_size=self.bilstm_hidden_size,
+        #     num_layers=self.bilstm_num_layers,
+        #     use_bias=True,
+        #     batch_first=True,
+        #     dropout=self.bilstm_dropout,
+        #     # bidirectional=True,
+        #     max_length=784
+        # )
+
+        self.bilstm_to_hidden1 = MLP(
             in_features=self.bilstm_hidden_size * 2,
-            out_features=self.mlp_hidden_size,
+            out_features=self.mlp_hidden_size,  # 800
+            depth=1,
+            flag=True,
+            before_act=False,
+            after_act=False
         )
 
-        self.hidden1_to_hidden2 = nn.Linear(
-            in_features=self.mlp_hidden_size,
-            out_features=self.mlp_output_size,
+        self.hidden1_to_hidden2 = MLP(
+            in_features=self.mlp_hidden_size,  # 800
+            out_features=self.mlp_output_size,  # 500
+            depth=1,
+            flag=False,
+            before_act=False,
+            after_act=False
         )
 
         self.hidden2_to_pos = nn.Linear(
@@ -214,19 +244,43 @@ class Pat(BaseModel):
             out_features=len(self.deprel_vocab),
         )
 
+        # input1_size, input2_size, hidden_size, output_size,
+
+        # self.hidden2_to_pos = DeepBiaffineScorer(
+        #     input1_size=self.mlp_output_size,  # 500
+        #     input2_size=self.mlp_output_size,  # 500
+        #     hidden_size=250,
+        #     output_size=len(self.pos_vocab),
+        # )
+        #
+        # self.hidden2_to_dep = DeepBiaffineScorer(
+        #     input1_size=self.mlp_output_size * 2 if self.use_head else self.mlp_output_size,
+        #     input2_size=self.mlp_output_size * 2 if self.use_head else self.mlp_output_size,
+        #     # Depending on whether the head is used or not
+        #     hidden_size=250,
+        #     output_size=len(self.deprel_vocab),
+        # )
+
         # init embedding weights only if glove is not defined
         if self.glove_emb is None:
             nn.init.xavier_normal_(self.word_embedding.weight)
         nn.init.xavier_normal_(self.tag_embedding.weight)
-        nn.init.xavier_normal_(self.bilstm_to_hidden1.weight)
-        nn.init.xavier_normal_(self.hidden1_to_hidden2.weight)
+        # init.xavier the nn.Linear in MLP
+        # for layer1, layer2 in zip(self.bilstm_to_hidden1.layers.modules(), self.hidden1_to_hidden2.layers.modules()):
+        # if isinstance(layer1, nn.Linear) and isinstance(layer1, nn.Linear):
+        # nn.init.xavier_normal_(layer1.weight)
+        # nn.init.xavier_normal_(layer2.weight)
+        # TODO: comment the following line if you use DeepBiaffineScorer
         nn.init.xavier_normal_(self.hidden2_to_pos.weight)
         nn.init.xavier_normal_(self.hidden2_to_dep.weight)
         for name, param in self.bilstm.named_parameters():
-            if 'bias' in name:
-                nn.init.constant_(param, 0)
-            elif 'weight' in name:
-                nn.init.xavier_normal_(param)
+            if 'fc' in name or 'atten' in name or 'batch' in name:
+                pass
+            else:
+                # if 'bias' in name:
+                # nn.init.constant_(param, 0)
+                if 'weight' in name:
+                    nn.init.xavier_normal_(param)
 
     def forward(self, sentences):
         orig_w = [[e.form for e in sentence] for sentence in sentences]  # all token from a given sentence
@@ -283,20 +337,27 @@ class Pat(BaseModel):
             x = torch.cat([x, polyglot_features_tensor], 2)
 
         # (batch_size, seq_len, embedding_dim) -> (batch_size, seq_len, n_lstm_units)
-        x = torch.nn.utils.rnn.pack_padded_sequence(x, x_lengths, batch_first=True)
-        x, _ = self.bilstm(x)
-        x, _ = torch.nn.utils.rnn.pad_packed_sequence(x, batch_first=True)
+        # x = torch.nn.utils.rnn.pack_padded_sequence(x, x_lengths, batch_first=True)
+        x = self.bilstm(x, x_lengths)
+        # x, (h_n, c_n) = self.bilstm(x)
+        # x, _ = torch.nn.utils.rnn.pad_packed_sequence(x, batch_first=True)
         # (batch_size, seq_len, n_lstm_units) -> (batch_size * seq_len, n_lstm_units)
         x = x.contiguous()
         x = x.view(-1, x.shape[2])
         x = self.bilstm_to_hidden1(x)
-        x = F.relu(x)
-        x = self.dropout(x)
         x = self.hidden1_to_hidden2(x)
-        x = F.relu(x)
 
+        # MLP
+        # x = self.bilstm_to_hidden1(x)
+        # x = F.relu(x)
+        # x = self.dropout(x)
+
+        # MLP
+        # x = self.hidden1_to_hidden2(x)
+        # x = F.relu(x)
+
+        # y1 = self.hidden2_to_pos(x, x)  # biaffine scorer
         y1 = self.hidden2_to_pos(x)
-        # print(x.shape)
         if self.mode == 'training':
             if self.use_head:
                 heads = [[e.head for e in sentence] for sentence in sentences]
@@ -329,6 +390,7 @@ class Pat(BaseModel):
 
                 offsets = (torch.arange(batch_size).repeat(seq_len).view(seq_len, batch_size).transpose(0, 1) * seq_len).contiguous().view(1, -1)[0]\
                     .to(self.device)
+
                 for i in range(heads.shape[0]):
                     if ids[i] != 0:
                         word = self.pos_vocab[int(maxes[i])]
@@ -345,6 +407,7 @@ class Pat(BaseModel):
         if self.use_head:
             x = torch.cat([x, heads], 1)
 
+        # y2 = self.hidden2_to_dep(x, x) # biaffine scorer
         y2 = self.hidden2_to_dep(x)
 
         if self.mode == 'evaluation':
